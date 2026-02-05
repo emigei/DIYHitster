@@ -2,131 +2,162 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hitster DIY Player</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HITSTER DIY</title>
     <style>
+        :root {
+            --spotify-green: #1DB954;
+            --bg-dark: #090909;
+            --glass: rgba(255, 255, 255, 0.1);
+        }
+
         body { 
-            font-family: 'Segoe UI', sans-serif; 
-            text-align: center; 
-            background-color: #121212; 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            background: radial-gradient(circle at top, #1e1e1e 0%, #000 100%);
             color: white; 
             display: flex; 
             flex-direction: column; 
-            justify-content: center; 
             align-items: center;
+            justify-content: center;
             height: 100vh; 
-            margin: 0; 
-        }
-        .container { width: 90%; max-width: 400px; }
-        .card-id { font-size: 1rem; color: #888; margin-bottom: 20px; letter-spacing: 2px; }
-        
-        #play-btn {
-            background-color: #1DB954; 
-            color: white;
-            border: none;
-            padding: 25px 50px;
-            font-size: 1.4rem;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 10px 20px rgba(29, 185, 84, 0.3);
-        }
-
-        #player-wrapper {
-            display: none;
-            position: relative;
-            width: 100%;
-            border-radius: 12px;
+            margin: 0;
             overflow: hidden;
         }
 
-        /* Verdeckt Titel/Interpret im Spotify Player */
-        #cover-up {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 80px; 
-            background-color: #282828;
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 30px;
+            width: 85%;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .card-number {
+            display: inline-block;
+            background: var(--spotify-green);
+            color: black;
+            font-weight: 900;
+            padding: 4px 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.8rem;
+        }
+
+        h1 { font-size: 1.8rem; margin: 0 0 10px 0; letter-spacing: -1px; }
+        p { color: #aaa; margin-bottom: 30px; font-size: 0.9rem; }
+
+        #play-btn {
+            background: var(--spotify-green);
+            color: black;
+            border: none;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            font-size: 2rem;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 10;
-            color: #1DB954;
-            font-size: 0.9rem;
+            margin: 0 auto;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 20px rgba(29, 185, 84, 0.4);
         }
 
-        iframe { border: none; background: transparent; }
-        .error { color: #ff4444; }
+        #play-btn:active { transform: scale(0.9) rotate(-10deg); }
+
+        #player-container {
+            display: none;
+            width: 100%;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        iframe { 
+            border-radius: 12px; 
+            border: none; 
+            background: transparent;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--spotify-green);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+            box-shadow: 0 0 8px var(--spotify-green);
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div id="content">
-        <p>Lade Musik-Datenbank...</p>
+<div class="card">
+    <div id="ui-initial">
+        <div class="card-number" id="card-label">READY</div>
+        <h1>Hitster DIY</h1>
+        <p id="instruction">Tippe zum Abspielen</p>
+        
+        <button id="play-btn" onclick="startPlayback()">▶</button>
+    </div>
+
+    <div id="player-container">
+        <div class="card-number" id="playing-label">LISTENING...</div>
+        <div style="position: relative;">
+            <div id="cover-mask" style="position:absolute; top:0; left:0; width:100%; height:80px; background:#282828; z-index:10; border-radius:12px 12px 0 0; display:flex; align-items:center; justify-content:center; font-size:12px; color:#555;">
+                TITEL VERDECKT
+            </div>
+            <iframe id="spotify-frame" src="" width="100%" height="152" allow="autoplay; encrypted-media"></iframe>
+        </div>
     </div>
 </div>
 
 <script>
-    let currentSpotifyUrl = "";
+    let trackUrl = "";
 
-    async function init() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get('id');
-        const contentDiv = document.getElementById('content');
-
-        if (!id) {
-            contentDiv.innerHTML = "<h1>DJ Hitster</h1><p>Bitte scanne eine Karte.</p>";
+    async function loadConfig() {
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+        
+        if(!id) {
+            document.getElementById('instruction').innerText = "Bitte Karte scannen";
+            document.getElementById('play-btn').style.opacity = "0.3";
             return;
         }
 
+        document.getElementById('card-label').innerText = "KARTE #" + id;
+
         try {
-            // Lädt die externe JSON-Datei
-            const response = await fetch('songs.json');
-            const songs = await response.json();
-
-            if (songs[id]) {
-                const spotifyId = songs[id];
-                // Wir bauen die URL, laden sie aber noch nicht in den Iframe
-                currentSpotifyUrl = `https://open.spotify.com/embed/track/${spotifyId}?utm_source=generator&autoplay=1`;
-
-                contentDiv.innerHTML = `
-                    <div class="card-id">KARTE #${id}</div>
-                    <div id="setup-area">
-                        <button onclick="startSong()" id="play-btn">🎵 ABSPIELEN</button>
-                    </div>
-                    <div id="player-wrapper">
-                        <div id="cover-up">🤫 Titel verdeckt</div>
-                        <iframe id="spotify-frame" 
-                                src="" 
-                                width="100%" 
-                                height="152" 
-                                allow="autoplay; encrypted-media">
-                        </iframe>
-                    </div>
-                `;
+            const res = await fetch('songs.json');
+            const data = await res.json();
+            if(data[id]) {
+                trackUrl = `https://open.spotify.com/embed/track/${data[id]}?utm_source=generator&autoplay=1`;
             } else {
-                contentDiv.innerHTML = `<h1 class="error">Fehler</h1><p>ID ${id} nicht gefunden.</p>`;
+                alert("ID nicht gefunden!");
             }
-        } catch (e) {
-            contentDiv.innerHTML = `<p class="error">Fehler beim Laden der songs.json. Stelle sicher, dass die Datei auf GitHub liegt.</p>`;
+        } catch(e) {
+            console.error("JSON Fehler");
         }
     }
 
-    window.startSong = function() {
-        const setup = document.getElementById('setup-area');
-        const wrapper = document.getElementById('player-wrapper');
-        const frame = document.getElementById('spotify-frame');
-
-        setup.style.display = 'none';
-        wrapper.style.display = 'block';
+    function startPlayback() {
+        if(!trackUrl) return;
         
-        // Erst jetzt, nach dem Klick, setzen wir die Source -> Browser erlaubt Audio
-        frame.src = currentSpotifyUrl;
-    };
+        document.getElementById('ui-initial').style.display = 'none';
+        document.getElementById('player-container').style.display = 'block';
+        
+        const frame = document.getElementById('spotify-frame');
+        frame.src = trackUrl;
+    }
 
-    init();
+    loadConfig();
 </script>
 
 </body>
