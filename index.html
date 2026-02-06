@@ -6,98 +6,122 @@
     <title>HITSTER DIY</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root { --spotify-green: #1DB954; --bg-dark: #090909; --glass: rgba(255, 255, 255, 0.1); }
+        :root { --spotify-green: #1DB954; --bg-dark: #121212; }
+        
         body { 
-            font-family: 'Inter', sans-serif; background: radial-gradient(circle at top, #1e1e1e 0%, #000 100%);
-            color: white; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-height: 100vh; margin: 0; overflow-x: hidden;
+            font-family: 'Inter', sans-serif; background: var(--bg-dark); color: white; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; margin: 0; 
         }
+
         .card {
-            background: var(--glass); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 24px; padding: 30px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px);
+            border-radius: 24px; padding: 25px; width: 85%; max-width: 350px;
+            text-align: center; border: 1px solid rgba(255,255,255,0.1);
         }
-        .card-number {
-            display: inline-block; background: var(--spotify-green); color: black;
-            font-weight: 900; padding: 4px 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.8rem;
+
+        /* Der große Play-Button-Container */
+        #interactive-area {
+            position: relative; width: 100%; height: 200px; 
+            margin-top: 20px; display: none; /* Wird erst bei Song-Load eingeblendet */
         }
-        #play-btn {
-            background: var(--spotify-green); color: black; border: none; width: 80px; height: 80px;
-            border-radius: 50%; font-size: 2rem; cursor: pointer; margin: 20px auto;
-            box-shadow: 0 0 20px rgba(29, 185, 84, 0.4);
+
+        #fake-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 100; background: #181818; border-radius: 12px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; border: 2px solid var(--spotify-green);
         }
-        #scan-btn {
+
+        .play-icon {
+            background: var(--spotify-green); width: 80px; height: 80px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: black; font-size: 2.5rem; box-shadow: 0 0 25px rgba(29, 185, 84, 0.5);
+        }
+
+        #spotify-frame {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 12px; border: none; z-index: 10;
+        }
+
+        #cover-mask {
+            position: absolute; top: 0; left: 0; width: 100%; height: 80px;
+            background: #282828; z-index: 50; border-radius: 12px 12px 0 0;
+            display: none; align-items: center; justify-content: center;
+            font-weight: bold; color: var(--spotify-green); pointer-events: none;
+        }
+
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; display: none; margin-top: 15px; }
+        
+        .scan-btn {
             background: transparent; color: white; border: 1px solid white;
-            padding: 10px 20px; border-radius: 50px; cursor: pointer; margin-top: 20px; font-size: 0.8rem; opacity: 0.7;
+            padding: 12px 20px; border-radius: 50px; cursor: pointer;
+            margin-top: 25px; width: 100%; font-size: 0.9rem;
         }
-        #reader { width: 100%; border-radius: 12px; overflow: hidden; display: none; margin-top: 10px; }
-        #player-container { display: none; width: 100%; }
-        iframe { border-radius: 12px; border: none; }
+
+        .card-number {
+            background: var(--spotify-green); color: black; font-weight: bold;
+            padding: 5px 15px; border-radius: 8px; font-size: 0.8rem;
+        }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div id="ui-initial">
-        <div class="card-number" id="card-label">BEREIT</div>
-        <h1 id="main-title">Hitster DIY</h1>
-        <p id="instruction">Karte scannen oder ID laden</p>
+    <div class="card-number" id="card-label">BEREIT</div>
+    
+    <div id="interactive-area">
+        <div id="cover-mask">🔒 TITEL VERDECKT</div>
         
-        <div id="playback-area" style="display: none;">
-            <button id="play-btn" onclick="startPlayback()">▶</button>
+        <iframe id="spotify-frame" src="" allow="autoplay; encrypted-media"></iframe>
+        
+        <div id="fake-overlay" onclick="handleInitialClick()">
+            <div class="play-icon">▶</div>
+            <p style="margin-top: 15px; font-weight: bold;">SONG STARTEN</p>
         </div>
-    </div>
-
-    <div id="player-container" style="display:none; width:100%;">
-        <div class="card-number">MUSIK LÄDT...</div>
-        <div style="position: relative; margin-top: 10px;">
-            <div id="cover-mask" style="position:absolute; top:0; left:0; width:100%; height:65px; background:#282828; z-index:10; border-radius:12px 12px 0 0; display:flex; align-items:center; justify-content:center; font-size:11px; color:#1DB954; font-weight:bold; pointer-events:none;">
-                🔒 TITEL VERDECKT
-            </div>
-            
-            <iframe id="spotify-frame" 
-                    src="" 
-                    width="100%" 
-                    height="352" 
-                    frameBorder="0" 
-                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
-                    style="border-radius:12px;">
-            </iframe>
-        </div>
-        <p style="font-size: 0.7rem; color: #555; margin-top: 10px;">Falls Musik nicht startet: Play im Player drücken</p>
     </div>
 
     <div id="reader"></div>
-    <button id="scan-btn" onclick="toggleScanner()">📷 NEUE KARTE SCANNEN</button>
+    <button class="scan-btn" onclick="toggleScanner()">📷 KARTE SCANNEN</button>
 </div>
 
 <script>
-    let trackUrl = "";
     let html5QrCode;
+    let trackUrl = "";
 
     async function loadSongById(id) {
         if(!id) return;
         document.getElementById('card-label').innerText = "KARTE #" + id;
+        
         try {
             const res = await fetch('songs.json');
             const data = await res.json();
             if(data[id]) {
                 trackUrl = `https://open.spotify.com/embed/track/${data[id]}?utm_source=generator&autoplay=1`;
-                document.getElementById('playback-area').style.display = 'block';
-                document.getElementById('instruction').innerText = "Tippe zum Abspielen";
-                // Player verstecken falls er noch offen war
-                document.getElementById('player-container').style.display = 'none';
-                document.getElementById('ui-initial').style.display = 'block';
+                
+                // UI zurücksetzen und vorbereiten
+                document.getElementById('interactive-area').style.display = 'block';
+                document.getElementById('fake-overlay').style.display = 'flex';
+                document.getElementById('cover-mask').style.display = 'none';
+                
+                // IFrame laden
+                const frame = document.getElementById('spotify-frame');
+                frame.src = trackUrl;
             }
-        } catch(e) { console.error("JSON Fehler", e); }
+        } catch(e) { alert("Fehler beim Laden der songs.json"); }
     }
 
-    function startPlayback() {
-        if(!trackUrl) return;
-        document.getElementById('ui-initial').style.display = 'none';
-        document.getElementById('player-container').style.display = 'block';
-        document.getElementById('spotify-frame').src = trackUrl;
+    function handleInitialClick() {
+        // Overlay weg, Maske drauf
+        document.getElementById('fake-overlay').style.display = 'none';
+        document.getElementById('cover-mask').style.display = 'flex';
+        
+        // Da der User geklickt hat, versucht Spotify nun abzuspielen.
+        // Falls es nicht von selbst startet, liegt der Spotify-Play-Button 
+        // jetzt direkt unter dem Finger des Users.
     }
 
+    // --- SCANNER LOGIK ---
     function toggleScanner() {
         const readerDiv = document.getElementById('reader');
         if (readerDiv.style.display === 'block') {
@@ -114,7 +138,6 @@
             { facingMode: "environment" }, 
             { fps: 10, qrbox: { width: 250, height: 250 } },
             (decodedText) => {
-                // Erwartet URL Format: ...?id=123
                 const url = new URL(decodedText);
                 const newId = url.searchParams.get("id");
                 if(newId) {
@@ -122,22 +145,10 @@
                     loadSongById(newId);
                 }
             },
-            (errorMessage) => { /* Scan läuft... */ }
-        ).catch(err => alert("Kamera-Fehler: " + err));
+            (errorMessage) => { }
+        ).catch(err => console.error(err));
     }
 
     function stopScanner() {
         if(html5QrCode) {
             html5QrCode.stop().then(() => {
-                document.getElementById('reader').style.display = 'none';
-            });
-        }
-    }
-
-    // Initialen Song laden falls ID in URL
-    const params = new URLSearchParams(window.location.search);
-    if(params.get('id')) loadSongById(params.get('id'));
-</script>
-
-</body>
-</html>
