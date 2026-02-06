@@ -61,7 +61,7 @@
         if (!trackId) return;
         const frame = document.getElementById('spotify-frame');
         // Wir laden den Player erst HIER durch den Klick
-        frame.src = `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&autoplay=1`;
+        frame.src = `https://open.spotify.com/embed/track/${trackId}`;
         
         document.getElementById('big-play-btn').style.display = 'none';
         document.getElementById('spotify-container').style.display = 'block';
@@ -92,4 +92,5 @@
 </script>
 
 </body>
+
 </html>
