@@ -6,132 +6,87 @@
     <title>HITSTER DIY</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root { --spotify-green: #1DB954; --bg: #121212; }
-        body { 
-            font-family: sans-serif; background-color: var(--bg); color: white; 
-            margin: 0; display: flex; flex-direction: column; align-items: center; padding: 20px;
-        }
-        .card {
-            background: #1e1e1e; border-radius: 20px; padding: 20px; 
-            width: 100%; max-width: 350px; text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .card-id { color: var(--spotify-green); font-weight: bold; margin-bottom: 15px; }
-        
-        /* Der Play-Button Bereich */
-        #playback-container { display: none; margin: 20px 0; position: relative; }
-        
-        #big-play-btn {
-            background: var(--spotify-green); color: black; border: none;
-            width: 100%; padding: 20px; border-radius: 12px; font-size: 1.2rem;
-            font-weight: bold; cursor: pointer;
-        }
-
-        #spotify-wrapper { display: none; margin-top: 15px; position: relative; }
-        
-        /* Tarnung für den Titel */
-        .mask {
-            position: absolute; top: 0; left: 0; width: 100%; height: 80px;
-            background: #282828; z-index: 10; border-radius: 12px 12px 0 0;
-            display: flex; align-items: center; justify-content: center; font-size: 12px;
-        }
-
-        #reader { width: 100%; border-radius: 12px; overflow: hidden; margin: 15px 0; display: none; }
-        
-        .action-btn {
-            background: transparent; color: white; border: 1px solid #555;
-            padding: 15px; border-radius: 12px; width: 100%; cursor: pointer; margin-top: 10px;
-        }
+        :root { --green: #1DB954; --bg: #121212; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .card { background: #1e1e1e; border-radius: 20px; padding: 25px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333; }
+        .card-id { color: var(--green); font-weight: bold; margin-bottom: 15px; letter-spacing: 1px; }
+        #player-area { display: none; margin-top: 20px; min-height: 160px; }
+        #big-play-btn { background: var(--green); color: black; border: none; width: 100%; padding: 25px; border-radius: 50px; font-size: 1.2rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3); }
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; margin: 15px 0; display: none; border: 2px solid #444; }
+        .scan-btn { background: transparent; color: #aaa; border: 1px solid #444; padding: 15px; border-radius: 12px; width: 100%; cursor: pointer; margin-top: 20px; font-size: 0.9rem; }
+        .mask { position: absolute; top: 0; left: 0; width: 100%; height: 80px; background: #282828; z-index: 10; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #888; border-bottom: 1px solid #121212; }
+        #spotify-container { position: relative; border-radius: 12px; overflow: hidden; height: 152px; display: none; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="card-id" id="display-id">BEREIT ZUM SCANNEN</div>
+    <div class="card-id" id="display-id">BEREIT</div>
+    <h2 id="title">Hitster DIY</h2>
     
-    <div id="playback-container">
-        <button id="big-play-btn" onclick="showPlayer()">🎵 SONG LADEN</button>
+    <div id="player-area">
+        <button id="big-play-btn" onclick="activatePlayer()">▶ SONG ABSPIELEN</button>
         
-        <div id="spotify-wrapper">
+        <div id="spotify-container">
             <div class="mask">🔒 TITEL VERDECKT</div>
             <iframe id="spotify-frame" src="" width="100%" height="152" frameborder="0" allow="autoplay; encrypted-media"></iframe>
         </div>
     </div>
 
     <div id="reader"></div>
-    <button class="action-btn" onclick="toggleScanner()">📷 KARTE SCANNEN</button>
+    <button class="scan-btn" onclick="toggleScanner()">📷 KARTE SCANNEN</button>
 </div>
 
 <script>
     let html5QrCode;
-    let currentTrackId = "";
+    let trackId = "";
 
-    // 1. Song Daten laden
     async function loadSong(id) {
         try {
             const res = await fetch('songs.json');
-            const data = await res.json();
-            if (data[id]) {
-                currentTrackId = data[id];
+            const songs = await res.json();
+            if (songs[id]) {
+                trackId = songs[id];
                 document.getElementById('display-id').innerText = "KARTE #" + id;
-                document.getElementById('playback-container').style.display = 'block';
-                document.getElementById('spotify-wrapper').style.display = 'none';
+                document.getElementById('title').style.display = 'none';
+                document.getElementById('player-area').style.display = 'block';
+                document.getElementById('spotify-container').style.display = 'none';
                 document.getElementById('big-play-btn').style.display = 'block';
-            } else {
-                alert("ID nicht in songs.json gefunden!");
+                document.getElementById('spotify-frame').src = ""; // Reset
             }
-        } catch (e) {
-            alert("Fehler: songs.json konnte nicht geladen werden.");
-        }
+        } catch (e) { alert("songs.json nicht gefunden!"); }
     }
 
-    // 2. Player anzeigen
-    function showPlayer() {
+    function activatePlayer() {
+        if (!trackId) return;
         const frame = document.getElementById('spotify-frame');
-        // Wir bauen den Link erst hier ein
-        frame.src = `https://open.spotify.com/embed/track/${currentTrackId}?utm_source=generator&autoplay=1`;
+        // Wir laden den Player erst HIER durch den Klick
+        frame.src = `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&autoplay=1`;
         
         document.getElementById('big-play-btn').style.display = 'none';
-        document.getElementById('spotify-wrapper').style.display = 'block';
+        document.getElementById('spotify-container').style.display = 'block';
     }
 
-    // 3. Scanner Funktionen
     function toggleScanner() {
         const readerEl = document.getElementById('reader');
         if (readerEl.style.display === 'block') {
-            stopScan();
+            if(html5QrCode) html5QrCode.stop().then(() => { readerEl.style.display = 'none'; });
         } else {
-            startScan();
-        }
-    }
-
-    function startScan() {
-        document.getElementById('reader').style.display = 'block';
-        html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start(
-            { facingMode: "environment" }, 
-            { fps: 10, qrbox: 250 },
-            (text) => {
+            readerEl.style.display = 'block';
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
                 const url = new URL(text);
                 const id = url.searchParams.get("id");
                 if (id) {
-                    stopScan();
-                    loadSong(id);
+                    html5QrCode.stop().then(() => {
+                        document.getElementById('reader').style.display = 'none';
+                        loadSong(id);
+                    });
                 }
-            },
-            () => {} // Ignoriere Scan-Fehler (wenn kein Code im Bild)
-        ).catch(err => alert("Kamera-Fehler: " + err));
-    }
-
-    function stopScan() {
-        if (html5QrCode) {
-            html5QrCode.stop().then(() => {
-                document.getElementById('reader').style.display = 'none';
-            });
+            }, () => {}).catch(err => alert("Kamera-Fehler: " + err));
         }
     }
 
-    // Check falls ID schon im Link ist beim Starten
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('id')) loadSong(urlParams.get('id'));
 </script>
