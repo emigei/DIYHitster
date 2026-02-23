@@ -3,86 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HITSTER DIY - SoundCloud Edition</title>
+    <title>HITSTER DIY - SoundCloud</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --orange: #ff5500; --bg: #121212; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        
         .card { background: #1e1e1e; border-radius: 24px; padding: 25px; width: 100%; max-width: 350px; text-align: center; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        .card-id { color: var(--orange); font-weight: bold; margin-bottom: 15px; }
-
-        /* Das SoundCloud-Guckloch */
+        /* PLAYER BEREICH */
+        #player-area { display: none; margin-top: 10px; }
+        
+        /* Das Guckloch (Clipper) */
         #clipper {
-            width: 80px; 
-            height: 80px; 
+            width: 85px; height: 85px; 
             margin: 20px auto; 
             overflow: hidden; 
             border-radius: 50%; 
             border: 4px solid var(--orange); 
             position: relative; 
             background: #000;
-            display: none;
+            display: none; 
         }
 
         #sc-frame {
             position: absolute;
-            width: 400px; 
-            height: 100px;
-            /* Positioniert den SoundCloud-Playbutton im Kreis */
-            top: -10px; 
+            width: 400px; height: 100px;
+            top: -8px; /* Feinjustierung für SoundCloud Play-Button */
             left: -10px; 
             border: none;
         }
 
         .action-btn { background: var(--orange); color: white; border: none; width: 100%; padding: 18px; border-radius: 50px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        
         #reader { width: 100%; border-radius: 12px; overflow: hidden; margin-top: 15px; display: none; border: 2px solid #444; }
-        .scan-trigger { background: transparent; color: #888; border: 1px solid #444; padding: 12px; border-radius: 50px; width: 100%; cursor: pointer; margin-top: 20px; font-size: 0.85rem; }
+        
+        .scan-trigger { background: transparent; color: #888; border: 1px solid #444; padding: 15px; border-radius: 50px; width: 100%; cursor: pointer; margin-top: 20px; font-size: 0.9rem; font-weight: bold; }
+        
+        .status { color: var(--orange); font-weight: bold; margin-bottom: 5px; letter-spacing: 1px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="card-id" id="display-id">BEREIT</div>
-    <h2 id="title" style="margin-top:0;">Hitster DIY</h2>
+    <div class="status" id="display-id">BEREIT</div>
+    <h2 id="main-title" style="margin: 0 0 15px 0;">Hitster DIY</h2>
     
-    <div id="player-area" style="display:none;">
+    <div id="player-area">
         <div id="clipper">
             <iframe id="sc-frame" scrolling="no" frameborder="no" allow="autoplay" src=""></iframe>
         </div>
-        <button id="load-btn" class="action-btn" onclick="startPlayback()">▶ SONG LADEN</button>
+        <button id="load-btn" class="action-btn" onclick="startPlayback()">▶ SONG ABSPIELEN</button>
     </div>
 
     <div id="reader"></div>
-    <button class="scan-trigger" onclick="toggleScanner()">📷 KARTE SCANNEN</button>
+    <button class="scan-trigger" id="scan-btn" onclick="toggleScanner()">📷 KARTE SCANNEN</button>
 </div>
 
 <script>
     let html5QrCode;
-    let currentTrackUrl = ""; // Bei SoundCloud brauchen wir meist die ganze URL
+    let currentTrackUrl = "";
 
-    async function loadSong(id) {
+    async function loadSongData(id) {
         try {
             const res = await fetch('songs.json');
             const songs = await res.json();
+            
             if (songs[id]) {
-                currentTrackUrl = songs[id]; // URL aus deiner JSON (z.B. "https://soundcloud.com/artist/track")
+                currentTrackUrl = songs[id];
+                
+                // UI anpassen
                 document.getElementById('display-id').innerText = "KARTE #" + id;
-                document.getElementById('title').style.display = 'none';
+                document.getElementById('main-title').style.display = 'none';
                 document.getElementById('player-area').style.display = 'block';
+                
+                // Player-Zustand zurücksetzen für neuen Song
                 document.getElementById('clipper').style.display = 'none';
                 document.getElementById('load-btn').style.display = 'block';
-                document.getElementById('sc-frame').src = ""; 
+                document.getElementById('sc-frame').src = "";
+            } else {
+                alert("ID " + id + " nicht in songs.json gefunden!");
             }
-        } catch (e) { alert("songs.json Fehler!"); }
+        } catch (e) {
+            alert("Fehler: songs.json konnte nicht geladen werden.");
+        }
     }
 
     function startPlayback() {
         if (!currentTrackUrl) return;
-        const frame = document.getElementById('sc-frame');
         
-        // SoundCloud Embed URL zusammenbauen
-        // visual=false sorgt für den kleinen Player (besser für das Guckloch)
+        const frame = document.getElementById('sc-frame');
+        // SoundCloud Embed URL mit Parametern für minimales Design
         const embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(currentTrackUrl)}&color=%23ff5500&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false`;
         
         frame.src = embedUrl;
@@ -94,22 +105,37 @@
     function toggleScanner() {
         const readerEl = document.getElementById('reader');
         if (readerEl.style.display === 'block') {
-            if(html5QrCode) html5QrCode.stop().then(() => { readerEl.style.display = 'none'; });
+            if(html5QrCode) {
+                html5QrCode.stop().then(() => { readerEl.style.display = 'none'; });
+            }
         } else {
             readerEl.style.display = 'block';
             html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-                const url = new URL(text);
-                const id = url.searchParams.get("id");
-                if (id) {
-                    html5QrCode.stop().then(() => {
-                        document.getElementById('reader').style.display = 'none';
-                        loadSong(id);
-                    });
-                }
-            }, () => {});
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                { fps: 10, qrbox: 250 }, 
+                (text) => {
+                    try {
+                        const url = new URL(text);
+                        const id = url.searchParams.get("id");
+                        if (id) {
+                            html5QrCode.stop().then(() => {
+                                document.getElementById('reader').style.display = 'none';
+                                loadSongData(id);
+                            });
+                        }
+                    } catch(e) {
+                        alert("QR-Code enthält keinen gültigen Link!");
+                    }
+                }, 
+                (error) => { }
+            ).catch(err => alert("Kamera-Fehler: " + err));
         }
     }
+
+    // Initialer Check für Direktlinks (?id=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('id')) loadSongData(urlParams.get('id'));
 </script>
 
 </body>
