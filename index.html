@@ -21,7 +21,7 @@
         }
 
         /* Styling-Werte für dich zum Anpassen am PC */
-        .clipper-setup { width: 300px; height: 160px; border-radius: 12px; }
+        .clipper-setup { width: auto; height: 210px; border-radius: 12px; }
         .clipper-play { width: 85px; height: 85px; border-radius: 50%; }
 
         #sc-frame { position: absolute; width: 400px; height: 160px; border: none; }
@@ -44,7 +44,7 @@
     
     <div id="player-area" style="display:none;">
         <div id="clipper" class="clipper-setup">
-            <iframe id="sc-frame" class="frame-setup" scrolling="no" frameborder="no" allow="autoplay" src=""></iframe>
+            <iframe style="width: 341px !important;" id="sc-frame" class="frame-setup" scrolling="no" frameborder="no" allow="autoplay" src=""></iframe>
         </div>
         <button id="mode-btn" class="action-btn" onclick="toggleGuckloch()">TITEL VERSTECKEN</button>
     </div>
