@@ -3,67 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HITSTER DIY - Dev Mode</title>
+    <title>HITSTER DIY - Ultra-Stable</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --orange: #ff5500; --bg: #121212; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .card { background: #1e1e1e; border-radius: 24px; padding: 25px; width: 100%; max-width: 350px; text-align: center; border: 1px solid #333; position: relative; }
         
-        /* DYNAMISCHES GUCKLOCH */
+        #status { color: var(--orange); font-weight: bold; margin-bottom: 15px; }
+
+        /* DER CLIPPER (Das Fenster) */
         #clipper {
-            margin: 20px auto; 
-            overflow: hidden; 
-            border: 4px solid var(--orange); 
+            width: 80px; height: 80px;
+            margin: 20px auto;
+            overflow: hidden;
+            border-radius: 50%;
+            border: 4px solid var(--orange);
             background: #000;
-            display: none;
             position: relative;
+            display: none; /* Erst beim Laden zeigen */
         }
 
-        /* Styling-Werte für dich zum Anpassen am PC */
-        .clipper-setup { width: auto; height: 210px; border-radius: 12px; }
-        .clipper-play { width: 85px; height: 85px; border-radius: 50%; }
-
-        #sc-frame { position: absolute; width: 400px; height: 160px; border: none; }
-        .frame-setup { top: 0; left: 0; }
-        .frame-play { top: -8px; left: -10px; } /* HIER am PC die Position im Kreis tunen! */
+        /* DER IFRAME (Fest fixiert) */
+        #sc-frame {
+            position: absolute;
+            width: 800px !important; /* Verhindert Responsive-Shifting */
+            height: 160px;
+            border: none;
+            /* HIER POSITION ANPASSEN */
+            top: -41px; 
+            left: -12px;
+        }
 
         .action-btn { background: var(--orange); color: white; border: none; width: 100%; padding: 18px; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 15px; }
         #reader { width: 100%; border-radius: 12px; overflow: hidden; margin-top: 15px; display: none; border: 1px solid #444; }
-        
-        /* Der unscheinbare Button für Devs */
         .dev-skip { position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: #333; font-size: 10px; cursor: pointer; }
-        .dev-skip:hover { color: #666; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <button class="dev-skip" onclick="manualId()">ID</button>
-    <div id="status" style="color:var(--orange); font-weight:bold; margin-bottom:10px;">BEREIT</div>
+    <div id="status">BEREIT</div>
     
-    <div id="player-area" style="display:none;">
-        <div id="clipper" class="clipper-setup">
-            <iframe style="width: 341px !important;" id="sc-frame" class="frame-setup" scrolling="no" frameborder="no" allow="autoplay" src=""></iframe>
-        </div>
-        <button id="mode-btn" class="action-btn" onclick="toggleGuckloch()">TITEL VERSTECKEN</button>
+    <div id="clipper">
+        <iframe id="sc-frame" scrolling="no" frameborder="no" allow="autoplay" src=""></iframe>
     </div>
 
     <div id="reader"></div>
     <button class="action-btn" id="scan-btn" onclick="toggleScanner()">📷 KARTE SCANNEN</button>
-    
-    <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
-        <a href="https://soundcloud.com/login" target="_blank" style="color:#444; font-size:10px; text-decoration:none;">🔑 LOGIN</a>
-    </div>
 </div>
 
 <script>
     let html5QrCode;
-    let isLocked = false;
 
-    // Diese Funktion lädt den Song
     async function loadSong(id) {
-        if (!id) return;
         try {
             const res = await fetch('songs.json');
             const songs = await res.json();
@@ -71,47 +65,19 @@
 
             if (trackUrl) {
                 document.getElementById('status').innerText = "KARTE #" + id;
-                document.getElementById('player-area').style.display = "block";
-                
-                // Reset auf "Groß-Modus"
-                isLocked = false;
                 const clipper = document.getElementById('clipper');
                 const frame = document.getElementById('sc-frame');
+                
                 clipper.style.display = "block";
-                clipper.className = "clipper-setup";
-                frame.className = "frame-setup";
-                document.getElementById('mode-btn').innerText = "TITEL VERSTECKEN";
-
-                // URL laden
-                frame.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(trackUrl)}&visual=false&auto_play=false`;
-            } else {
-                alert("ID " + id + " nicht in der songs.json!");
+                // Wir erzwingen das Widget-Layout
+                frame.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(trackUrl)}&visual=false&auto_play=false&show_artwork=false&color=ff5500`;
             }
-        } catch (e) { console.error("JSON Fehler", e); }
+        } catch (e) { alert("JSON Fehler!"); }
     }
 
-    // Manueller Button für PC-Tests
     function manualId() {
-        const id = prompt("Welche Karten-ID willst du testen?");
+        const id = prompt("ID eingeben:");
         if (id) loadSong(id);
-    }
-
-    function toggleGuckloch() {
-        const clipper = document.getElementById('clipper');
-        const frame = document.getElementById('sc-frame');
-        const btn = document.getElementById('mode-btn');
-
-        if (!isLocked) {
-            clipper.className = "clipper-play";
-            frame.className = "frame-play";
-            btn.innerText = "PLAYER ZEIGEN (FIX)";
-            isLocked = true;
-        } else {
-            clipper.className = "clipper-setup";
-            frame.className = "frame-setup";
-            btn.innerText = "TITEL VERSTECKEN";
-            isLocked = false;
-        }
     }
 
     function toggleScanner() {
@@ -122,25 +88,20 @@
             readerEl.style.display = 'block';
             html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-                const url = new URL(text);
-                const id = url.searchParams.get("id");
-                if (id) {
-                    html5QrCode.stop().then(() => {
-                        document.getElementById('reader').style.display = 'none';
-                        loadSong(id);
-                    });
+                const id = new URL(text).searchParams.get("id");
+                if (id) { 
+                    html5QrCode.stop().then(() => { 
+                        readerEl.style.display = 'none'; 
+                        loadSong(id); 
+                    }); 
                 }
             }, () => {});
         }
     }
 
-    // AUTOMATISCHER START BEIM LADEN (wenn ID in URL vorhanden)
     window.onload = () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const startId = urlParams.get('id');
-        if (startId) {
-            loadSong(startId);
-        }
+        const id = new URLSearchParams(window.location.search).get('id');
+        if (id) loadSong(id);
     };
 </script>
 </body>
