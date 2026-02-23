@@ -3,37 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HITSTER DIY - Ultra-Stable</title>
+    <title>HITSTER DIY - Stabil & Schaltbar</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --orange: #ff5500; --bg: #121212; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .card { background: #1e1e1e; border-radius: 24px; padding: 25px; width: 100%; max-width: 350px; text-align: center; border: 1px solid #333; position: relative; }
         
-        #status { color: var(--orange); font-weight: bold; margin-bottom: 15px; }
-
-        /* DER CLIPPER (Das Fenster) */
+        /* DAS GUCKLOCH (DYNAMISCH) */
         #clipper {
-            width: 80px; height: 80px;
-            margin: 20px auto;
-            overflow: hidden;
-            border-radius: 50%;
-            border: 4px solid var(--orange);
+            margin: 20px auto; 
+            overflow: hidden; 
+            border: 4px solid var(--orange); 
             background: #000;
+            display: none;
             position: relative;
-            display: none; /* Erst beim Laden zeigen */
+            transition: all 0.3s ease;
         }
 
-        /* DER IFRAME (Fest fixiert) */
+        /* Modus 1: Setup (Groß zum Bestätigen) */
+        .clipper-setup { width: 300px; height: 160px; border-radius: 12px; }
+        
+        /* Modus 2: Play (Klein & Rund) */
+        .clipper-play { width: 85px; height: 85px; border-radius: 50%; }
+
+        /* DER STARRE IFRAME */
         #sc-frame {
             position: absolute;
-            width: 800px !important; /* Verhindert Responsive-Shifting */
+            width: 800px !important; /* Verhindert Shifting */
             height: 160px;
             border: none;
-            /* HIER POSITION ANPASSEN */
-            top: -41px; 
-            left: -12px;
+            transition: all 0.3s ease;
         }
+
+        /* Positionierung */
+        .frame-pos-setup { top: 0; left: 0; }
+        .frame-pos-play { top: -41px; left: -12px; } /* Hier am PC feinjustieren */
 
         .action-btn { background: var(--orange); color: white; border: none; width: 100%; padding: 18px; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 15px; }
         #reader { width: 100%; border-radius: 12px; overflow: hidden; margin-top: 15px; display: none; border: 1px solid #444; }
@@ -44,10 +49,13 @@
 
 <div class="card">
     <button class="dev-skip" onclick="manualId()">ID</button>
-    <div id="status">BEREIT</div>
+    <div id="status" style="color:var(--orange); font-weight:bold; margin-bottom:10px;">BEREIT</div>
     
-    <div id="clipper">
-        <iframe id="sc-frame" scrolling="no" frameborder="no" allow="autoplay" src=""></iframe>
+    <div id="player-area" style="display:none;">
+        <div id="clipper" class="clipper-setup">
+            <iframe id="sc-frame" class="frame-pos-setup" scrolling="no" frameborder="no" allow="autoplay" src=""></iframe>
+        </div>
+        <button id="mode-btn" class="action-btn" onclick="toggleMode()">TITEL VERSTECKEN</button>
     </div>
 
     <div id="reader"></div>
@@ -56,6 +64,7 @@
 
 <script>
     let html5QrCode;
+    let isLocked = false;
 
     async function loadSong(id) {
         try {
@@ -65,14 +74,38 @@
 
             if (trackUrl) {
                 document.getElementById('status').innerText = "KARTE #" + id;
+                document.getElementById('player-area').style.display = "block";
+                
+                // Reset auf Setup-Modus
+                isLocked = false;
                 const clipper = document.getElementById('clipper');
                 const frame = document.getElementById('sc-frame');
-                
                 clipper.style.display = "block";
-                // Wir erzwingen das Widget-Layout
+                clipper.className = "clipper-setup";
+                frame.className = "frame-pos-setup";
+                document.getElementById('mode-btn').innerText = "TITEL VERSTECKEN";
+
                 frame.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(trackUrl)}&visual=false&auto_play=false&show_artwork=false&color=ff5500`;
             }
         } catch (e) { alert("JSON Fehler!"); }
+    }
+
+    function toggleMode() {
+        const clipper = document.getElementById('clipper');
+        const frame = document.getElementById('sc-frame');
+        const btn = document.getElementById('mode-btn');
+
+        if (!isLocked) {
+            clipper.className = "clipper-play";
+            frame.className = "frame-pos-play";
+            btn.innerText = "PLAYER ZEIGEN";
+            isLocked = true;
+        } else {
+            clipper.className = "clipper-setup";
+            frame.className = "frame-pos-setup";
+            btn.innerText = "TITEL VERSTECKEN";
+            isLocked = false;
+        }
     }
 
     function manualId() {
