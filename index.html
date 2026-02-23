@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HITSTER DIY - SoundCloud</title>
+    <title>HITSTER DIY - SoundCloud Pro</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --orange: #ff5500; --bg: #121212; }
@@ -11,10 +11,13 @@
         
         .card { background: #1e1e1e; border-radius: 24px; padding: 25px; width: 100%; max-width: 350px; text-align: center; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
+        /* LOGIN BEREICH */
+        #auth-area { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #444; }
+        .auth-btn { background: #333; color: var(--orange); border: 1px solid var(--orange); padding: 10px 15px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; }
+
         /* PLAYER BEREICH */
         #player-area { display: none; margin-top: 10px; }
         
-        /* Das Guckloch (Clipper) */
         #clipper {
             width: 85px; height: 85px; 
             margin: 20px auto; 
@@ -29,23 +32,25 @@
         #sc-frame {
             position: absolute;
             width: 400px; height: 100px;
-            top: -8px; /* Feinjustierung für SoundCloud Play-Button */
+            top: -8px; 
             left: -10px; 
             border: none;
         }
 
         .action-btn { background: var(--orange); color: white; border: none; width: 100%; padding: 18px; border-radius: 50px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 15px; }
-        
         #reader { width: 100%; border-radius: 12px; overflow: hidden; margin-top: 15px; display: none; border: 2px solid #444; }
-        
         .scan-trigger { background: transparent; color: #888; border: 1px solid #444; padding: 15px; border-radius: 50px; width: 100%; cursor: pointer; margin-top: 20px; font-size: 0.9rem; font-weight: bold; }
-        
-        .status { color: var(--orange); font-weight: bold; margin-bottom: 5px; letter-spacing: 1px; font-size: 0.8rem; }
+        .status { color: var(--orange); font-weight: bold; margin-bottom: 5px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
 <div class="card">
+    <div id="auth-area">
+        <div style="font-size: 0.7rem; color: #888; margin-bottom: 10px;">Go+ Tracks erfordern Login im Browser:</div>
+        <a href="https://soundcloud.com/login" target="_blank" class="auth-btn">🔑 SOUNDCLOUD LOGIN</a>
+    </div>
+
     <div class="status" id="display-id">BEREIT</div>
     <h2 id="main-title" style="margin: 0 0 15px 0;">Hitster DIY</h2>
     
@@ -71,33 +76,25 @@
             
             if (songs[id]) {
                 currentTrackUrl = songs[id];
-                
-                // UI anpassen
                 document.getElementById('display-id').innerText = "KARTE #" + id;
                 document.getElementById('main-title').style.display = 'none';
                 document.getElementById('player-area').style.display = 'block';
-                
-                // Player-Zustand zurücksetzen für neuen Song
                 document.getElementById('clipper').style.display = 'none';
                 document.getElementById('load-btn').style.display = 'block';
                 document.getElementById('sc-frame').src = "";
             } else {
-                alert("ID " + id + " nicht in songs.json gefunden!");
+                alert("ID " + id + " fehlt!");
             }
-        } catch (e) {
-            alert("Fehler: songs.json konnte nicht geladen werden.");
-        }
+        } catch (e) { alert("JSON Fehler!"); }
     }
 
     function startPlayback() {
         if (!currentTrackUrl) return;
-        
         const frame = document.getElementById('sc-frame');
-        // SoundCloud Embed URL mit Parametern für minimales Design
+        // SoundCloud Embed URL
         const embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(currentTrackUrl)}&color=%23ff5500&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false`;
         
         frame.src = embedUrl;
-        
         document.getElementById('load-btn').style.display = 'none';
         document.getElementById('clipper').style.display = 'block';
     }
@@ -105,35 +102,23 @@
     function toggleScanner() {
         const readerEl = document.getElementById('reader');
         if (readerEl.style.display === 'block') {
-            if(html5QrCode) {
-                html5QrCode.stop().then(() => { readerEl.style.display = 'none'; });
-            }
+            if(html5QrCode) { html5QrCode.stop().then(() => { readerEl.style.display = 'none'; }); }
         } else {
             readerEl.style.display = 'block';
             html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                { fps: 10, qrbox: 250 }, 
-                (text) => {
-                    try {
-                        const url = new URL(text);
-                        const id = url.searchParams.get("id");
-                        if (id) {
-                            html5QrCode.stop().then(() => {
-                                document.getElementById('reader').style.display = 'none';
-                                loadSongData(id);
-                            });
-                        }
-                    } catch(e) {
-                        alert("QR-Code enthält keinen gültigen Link!");
-                    }
-                }, 
-                (error) => { }
-            ).catch(err => alert("Kamera-Fehler: " + err));
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
+                const url = new URL(text);
+                const id = url.searchParams.get("id");
+                if (id) {
+                    html5QrCode.stop().then(() => {
+                        document.getElementById('reader').style.display = 'none';
+                        loadSongData(id);
+                    });
+                }
+            }, () => { }).catch(err => alert("Kamera-Fehler: " + err));
         }
     }
 
-    // Initialer Check für Direktlinks (?id=...)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('id')) loadSongData(urlParams.get('id'));
 </script>
