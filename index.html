@@ -66,29 +66,32 @@
     let html5QrCode;
     let isLocked = false;
 
-    async function loadSong(id) {
-        try {
-            const res = await fetch('songs.json');
-            const songs = await res.json();
-            const trackUrl = songs[id];
+    // Wir nutzen das SoundCloud Widget API Prinzip
+    function loadSong(id) {
+    try {
+        const res = await fetch('songs.json');
+        const songs = await res.json();
+        const trackUrl = songs[id];
 
-            if (trackUrl) {
-                document.getElementById('status').innerText = "KARTE #" + id;
-                document.getElementById('player-area').style.display = "block";
-                
-                // Reset auf Setup-Modus
-                isLocked = false;
-                const clipper = document.getElementById('clipper');
-                const frame = document.getElementById('sc-frame');
-                clipper.style.display = "block";
-                clipper.className = "clipper-setup";
-                frame.className = "frame-pos-setup";
-                document.getElementById('mode-btn').innerText = "TITEL VERSTECKEN";
-
-                frame.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(trackUrl)}&visual=false&auto_play=false&show_artwork=false&color=ff5500`;
+        if (trackUrl) {
+            document.getElementById('status').innerText = "KARTE #" + id;
+            document.getElementById('player-area').style.display = "block";
+            
+            const frame = document.getElementById('sc-frame');
+            
+            // WICHTIG: Wir ändern nur das 'url' Attribut im src, 
+            // anstatt das ganze Iframe-Element neu zu bauen.
+            const newSrc = `https://w.soundcloud.com/player/?url=${encodeURIComponent(trackUrl)}&visual=false&auto_play=false&show_artwork=false&color=ff5500`;
+            
+            if (frame.src !== newSrc) {
+                frame.src = newSrc;
             }
-        } catch (e) { alert("JSON Fehler!"); }
-    }
+
+            // Zurück in den Setup-Modus, falls man wieder den Badger/Login sieht
+            unlockPlayerManually(); 
+        }
+    } catch (e) { console.error(e); }
+}
 
     function toggleMode() {
         const clipper = document.getElementById('clipper');
