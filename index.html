@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HITSTER DIY - Ultra-Stable1</title>
+    <title>1HITSTER DIY - API Mode</title>
+    <script src="https://w.soundcloud.com/player/api.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --orange: #ff5500; --bg: #121212; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .card { background: #1e1e1e; border-radius: 24px; padding: 25px; width: 100%; max-width: 350px; text-align: center; border: 1px solid #333; position: relative; }
         
-        /* DER CLIPPER */
         #clipper {
             margin: 20px auto; 
             overflow-x: auto; 
@@ -21,13 +21,9 @@
             position: relative;
         }
 
-        /* Setup-Modus: Deine Maße */
         .clipper-setup { width: 310px; height: 220px; border-radius: 12px; overflow-x: auto !important; }
-        
-        /* Play-Modus: Dein winziges Guckloch */
         .clipper-play { width: 50px; height: 50px; border-radius: 50%; overflow: hidden !important; }
 
-        /* IFRAME: Festgeankert auf 600px Breite gegen Verschieben */
         #sc-frame {
             position: absolute;
             width: 600px; 
@@ -36,7 +32,6 @@
         }
 
         .frame-pos-setup { top: 0; left: 0; }
-        /* Deine exakten Styling-Punkte */
         .frame-pos-play { top: -7px; left: -5px; } 
 
         .action-btn { background: var(--orange); color: white; border: none; width: 100%; padding: 18px; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 15px; }
@@ -51,7 +46,8 @@
     
     <div id="player-area" style="display:none;">
         <div id="clipper" class="clipper-setup">
-            <iframe id="sc-frame" class="frame-pos-setup" scrolling="yes" frameborder="no" allow="autoplay" src=""></iframe>
+            <iframe id="sc-frame" class="frame-pos-setup" scrolling="yes" frameborder="no" allow="autoplay" 
+                src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1&show_artwork=false"></iframe>
         </div>
         <button id="mode-btn" class="action-btn" onclick="toggleMode()">TITEL VERSTECKEN</button>
         <p id="hint" style="font-size: 10px; color: #888; margin-top: 5px;">Falls ein Slider kommt: Im Kasten seitlich wischen!</p>
@@ -64,6 +60,16 @@
 <script>
     let html5QrCode;
     let isLocked = false;
+    let scWidget;
+
+    // Initialisierung des Widgets sobald die Seite bereit ist
+    window.onload = () => {
+        const frame = document.getElementById('sc-frame');
+        scWidget = SC.Widget(frame);
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('id')) loadSong(urlParams.get('id'));
+    };
 
     async function loadSong(id) {
         try {
@@ -75,19 +81,28 @@
                 document.getElementById('status').innerText = "KARTE #" + id;
                 document.getElementById('player-area').style.display = "block";
                 
-                isLocked = false;
-                const clipper = document.getElementById('clipper');
-                const frame = document.getElementById('sc-frame');
-                clipper.className = "clipper-setup";
-                frame.className = "frame-pos-setup";
-                document.getElementById('mode-btn').innerText = "TITEL VERSTECKEN";
-                document.getElementById('hint').style.display = "block";
+                // ZURÜCK ZUM SETUP-MODUS BEIM LADEN
+                resetToSetup();
 
-                // Trick gegen App-Abfrage: Wir bereinigen die URL und nutzen das Widget-Format
-                const cleanUrl = trackUrl.split('?')[0];
-                frame.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(cleanUrl)}&visual=false&auto_play=false&show_artwork=false&color=ff5500&sharing=false&download=false&show_playcount=false`;
+                // DER MAGIC TRICK: Song laden ohne Iframe-Reload
+                scWidget.load(trackUrl, {
+                    visual: false,
+                    auto_play: false,
+                    show_artwork: false,
+                    color: "ff5500"
+                });
             }
-        } catch (e) { alert("JSON Fehler!"); }
+        } catch (e) { console.error("Fehler:", e); }
+    }
+
+    function resetToSetup() {
+        isLocked = false;
+        const clipper = document.getElementById('clipper');
+        const frame = document.getElementById('sc-frame');
+        clipper.className = "clipper-setup";
+        frame.className = "frame-pos-setup";
+        document.getElementById('mode-btn').innerText = "TITEL VERSTECKEN";
+        document.getElementById('hint').style.display = "block";
     }
 
     function toggleMode() {
@@ -102,11 +117,7 @@
             document.getElementById('hint').style.display = "none";
             isLocked = true;
         } else {
-            clipper.className = "clipper-setup";
-            frame.className = "frame-pos-setup";
-            btn.innerText = "TITEL VERSTECKEN";
-            document.getElementById('hint').style.display = "block";
-            isLocked = false;
+            resetToSetup();
         }
     }
 
@@ -123,16 +134,14 @@
             readerEl.style.display = 'block';
             html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-                try {
-                    const url = new URL(text);
-                    const id = url.searchParams.get("id");
-                    if (id) {
-                        html5QrCode.stop().then(() => {
-                            document.getElementById('reader').style.display = 'none';
-                            loadSong(id);
-                        });
-                    }
-                } catch(e) { alert("Keine gültige ID im QR-Code!"); }
+                const url = new URL(text);
+                const id = url.searchParams.get("id");
+                if (id) {
+                    html5QrCode.stop().then(() => {
+                        document.getElementById('reader').style.display = 'none';
+                        loadSong(id);
+                    });
+                }
             }, () => {});
         }
     }
