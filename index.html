@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>1HITSTER DIY - API Mode</title>
+    <title>HITSTER DIY - Stealth Mode</title>
     <script src="https://w.soundcloud.com/player/api.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
@@ -62,11 +62,9 @@
     let isLocked = false;
     let scWidget;
 
-    // Initialisierung des Widgets sobald die Seite bereit ist
     window.onload = () => {
         const frame = document.getElementById('sc-frame');
         scWidget = SC.Widget(frame);
-        
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('id')) loadSong(urlParams.get('id'));
     };
@@ -81,10 +79,10 @@
                 document.getElementById('status').innerText = "KARTE #" + id;
                 document.getElementById('player-area').style.display = "block";
                 
-                // ZURÜCK ZUM SETUP-MODUS BEIM LADEN
-                resetToSetup();
+                // DER ENTSCHEIDENDE PUNKT:
+                // Wir rufen resetToSetup() NICHT mehr automatisch auf.
+                // Das Guckloch bleibt in dem Zustand, in dem es gerade ist.
 
-                // DER MAGIC TRICK: Song laden ohne Iframe-Reload
                 scWidget.load(trackUrl, {
                     visual: false,
                     auto_play: false,
@@ -95,29 +93,25 @@
         } catch (e) { console.error("Fehler:", e); }
     }
 
-    function resetToSetup() {
-        isLocked = false;
-        const clipper = document.getElementById('clipper');
-        const frame = document.getElementById('sc-frame');
-        clipper.className = "clipper-setup";
-        frame.className = "frame-pos-setup";
-        document.getElementById('mode-btn').innerText = "TITEL VERSTECKEN";
-        document.getElementById('hint').style.display = "block";
-    }
-
     function toggleMode() {
         const clipper = document.getElementById('clipper');
         const frame = document.getElementById('sc-frame');
         const btn = document.getElementById('mode-btn');
 
         if (!isLocked) {
+            // VERSTECKEN (Klein machen)
             clipper.className = "clipper-play";
             frame.className = "frame-pos-play";
-            btn.innerText = "ZUM SLIDER / LOGIN";
+            btn.innerText = "TITEL ANZEIGEN (FIX)";
             document.getElementById('hint').style.display = "none";
             isLocked = true;
         } else {
-            resetToSetup();
+            // ANZEIGEN (Groß machen für Captcha/Badger)
+            clipper.className = "clipper-setup";
+            frame.className = "frame-pos-setup";
+            btn.innerText = "TITEL VERSTECKEN";
+            document.getElementById('hint').style.display = "block";
+            isLocked = false;
         }
     }
 
