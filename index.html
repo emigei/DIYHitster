@@ -85,7 +85,7 @@
 
                 // Trick gegen App-Abfrage: Wir bereinigen die URL und nutzen das Widget-Format
                 const cleanUrl = trackUrl.split('?')[0];
-                frame.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(cleanUrl)}&visual=false&auto_play=false&show_artwork=false&color=ff5500`;
+                frame.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(cleanUrl)}&visual=false&auto_play=false&show_artwork=false&color=ff5500&sharing=false&download=false&show_playcount=false`;
             }
         } catch (e) { alert("JSON Fehler!"); }
     }
