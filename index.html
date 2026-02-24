@@ -18,7 +18,7 @@
         /* Stroboskop Hintergrund */
         @keyframes strobo {
             0% { background: #000; }
-            50% { background: #333; }
+            50% { background: #b8b7b7; }
             100% { background: #000; }
         }
 
@@ -32,10 +32,10 @@
 
         /* Rave Farben Zyklus B (für die Card - zeitversetzte Farben) */
         @keyframes raveColorsB {
-            0% { border-color: #ffff00; box-shadow: 0 0 40px #ffff00; }
-            33% { border-color: #ff00ff; box-shadow: 0 0 40px #ff00ff; }
-            66% { border-color: #00ffff; box-shadow: 0 0 40px #00ffff; }
-            100% { border-color: #ffff00; box-shadow: 0 0 40px #ffff00; }
+            0% { border-color: #ffff00; box-shadow: 0 0 40px #ffff00; border:4px solid #ffff00; background: #ffff00;}
+            33% { border-color: #ff00ff; box-shadow: 0 0 40px #ff00ff; border:4px solid #ff00ff; background: #ff00ff;}
+            66% { border-color: #00ffff; box-shadow: 0 0 40px #00ffff; border:4px solid #00ffff; background: #00ffff;}
+            100% { border-color: #ffff00; box-shadow: 0 0 40px #ffff00; border:4px solid #ffff00; background: #ffff00;}
         }
 
         @keyframes shake {
@@ -59,11 +59,10 @@
         }
 
         /* --- RAVE AKTIV --- */
-        .rave-active { animation: strobo 0.08s infinite !important; }
+        .rave-active { animation: strobo 0.1s infinite !important; }
         .rave-active .card { animation: raveColorsB 1.5s infinite, shake 0.1s infinite; background: rgba(0,0,0,0.8); }
         .rave-active #clipper { animation: raveColorsA 1.5s infinite !important; }
         .rave-active .action-btn { animation: raveColorsA 1.5s infinite; border: none; }
-        .rave-active #status { animation: raveColorsA 1.5s infinite; }
 
         /* --- PLAYER STUFF --- */
 
