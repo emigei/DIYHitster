@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HITSTER DIY - Ultra Rave</title>
+    <title>HITSTER DIY - Ultra Rave Vinyl</title>
     <script src="https://w.soundcloud.com/player/api.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
@@ -11,6 +11,32 @@
             --orange: #ff5500; 
             --bg: #0a0a0a; 
             --card-bg: #161616;
+        }
+
+        /* --- NEU: VINYL HINTERGRUND ANIMATION --- */
+        .bg-animation {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
+        }
+
+        .ring {
+            position: absolute;
+            top: 50%; left: 50%;
+            border: 1px solid rgba(255, 85, 0, 0.08);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: rotateRing 25s linear infinite;
+        }
+
+        .ring:nth-child(1) { width: 350px; height: 350px; border-width: 30px; border-color: rgba(255,255,255,0.02); }
+        .ring:nth-child(2) { width: 550px; height: 550px; border-style: dashed; animation-duration: 45s; }
+        .ring:nth-child(3) { width: 850px; height: 850px; opacity: 0.4; animation-duration: 65s; animation-direction: reverse; }
+
+        @keyframes rotateRing {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
         }
 
         /* --- ANIMATIONEN --- */
@@ -56,10 +82,12 @@
             background: var(--card-bg); border-radius: 32px; padding: 30px; 
             width: 90%; max-width: 360px; text-align: center; border: 2px solid #333; 
             position: relative; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
         }
 
         /* --- RAVE AKTIV --- */
         .rave-active { animation: strobo 0.1s infinite !important; }
+        .rave-active .bg-animation { display: none; } /* Vinyl-Ringe im Rave-Modus aus */
         .rave-active .card { animation: raveColorsB 1.5s infinite, shake 0.1s infinite; background: rgba(0,0,0,0.8); }
         .rave-active #clipper { animation: raveColorsA 1.5s infinite !important; }
         .rave-active .action-btn { animation: raveColorsA 1.5s infinite; border: none; }
@@ -98,6 +126,12 @@
     </style>
 </head>
 <body id="body">
+
+<div class="bg-animation">
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="ring"></div>
+</div>
 
 <div class="card">
     <button class="dev-skip" onclick="manualId()">DEV</button>
