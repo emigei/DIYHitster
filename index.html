@@ -174,75 +174,118 @@
     </div>
 </div>
 
-<div id="setup-screen" class="card" style="margin-bottom: 20px;">
-    <h2>Spielmodus wählen</h2>
-    <div id="playlist-buttons">
+<div id="setup-screen" class="card">
+    <div id="status">Wähle eine Playlist</div>
+    <div id="playlist-buttons" style="margin-top: 20px;">
         </div>
 </div>
 
 <div id="game-screen" style="display:none;">
-    </div>
-
-    
-    <div id="player-area" style="display:none;">
-        <div id="clipper" class="clipper-setup">
-            <iframe id="sc-frame" class="frame-pos-setup" scrolling="yes" frameborder="no" allow="autoplay" 
-                src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1&show_artwork=false"></iframe>
+    <div class="card">
+        <button class="dev-skip" onclick="manualId()">DEV</button>
+        <div id="game-status" style="color: var(--orange); font-weight: bold; margin-bottom: 15px;">Bereit</div>
+        
+        <div id="player-area" style="display:none;">
+            <div id="clipper" class="clipper-setup">
+                <iframe id="sc-frame" scrolling="yes" frameborder="no" allow="autoplay" 
+                    src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1&show_artwork=false"></iframe>
+            </div>
+            <button id="mode-btn" class="action-btn" onclick="toggleMode()">Titel verstecken</button>
         </div>
-        <button id="mode-btn" class="action-btn" onclick="toggleMode()">Titel verstecken</button>
-    </div>
 
-    <div id="reader" style="width:100%; border-radius:20px; overflow:hidden; margin-top:15px; display:none; border: 1px solid #333;"></div>
-    <button class="action-btn" id="scan-btn" onclick="toggleScanner()" style="margin-top:20px;">📷 Karte Scannen</button>
-    
-    <button class="party-btn" onclick="toggleRave()">🚀 RAVE MODE AKTIVIEREN</button>
+        <div id="reader" style="width:100%; border-radius:20px; overflow:hidden; margin-top:15px; display:none; border: 1px solid #333;"></div>
+        <button class="action-btn" id="scan-btn" onclick="toggleScanner()" style="margin-top:20px;">📷 Karte Scannen</button>
+        
+        <button class="party-btn" onclick="toggleRave()">🚀 RAVE MODE AKTIVIEREN</button>
+        <button class="party-btn" onclick="location.reload()" style="margin-top:10px; opacity: 0.5;">⬅ Playlist wechseln</button>
+    </div>
 </div>
 
 <script>
     let html5QrCode;
     let isLocked = false;
     let scWidget;
+    let currentPlaylist = null;
+    let allPlaylists = {};
 
-    window.onload = () => {
+    window.onload = async () => {
         scWidget = SC.Widget(document.getElementById('sc-frame'));
+        
+        // Songs laden
+        try {
+            const res = await fetch('songs.json');
+            allPlaylists = await res.json();
+            setupPlaylistMenu();
+        } catch (e) { 
+            console.error("JSON Fehler:", e); 
+            document.getElementById('status').innerText = "Fehler beim Laden der songs.json";
+        }
+
+        // Falls ID in URL (Direktstart)
         const id = new URLSearchParams(window.location.search).get('id');
-        if (id) loadSong(id);
+        if (id) {
+            // Wenn eine ID da ist, muss man raten, aus welcher Playlist sie kommt 
+            // oder man nutzt eine "Default" Playlist.
+        }
     };
 
-    function toggleRave() {
-        document.getElementById('body').classList.toggle('rave-active');
+    function setupPlaylistMenu() {
+        const container = document.getElementById('playlist-buttons');
+        Object.keys(allPlaylists).forEach(name => {
+            const btn = document.createElement('button');
+            btn.className = "action-btn";
+            btn.style.marginBottom = "10px";
+            btn.innerText = name;
+            btn.onclick = () => selectPlaylist(name);
+            container.appendChild(btn);
+        });
+    }
+
+    function selectPlaylist(name) {
+        currentPlaylist = name;
+        document.getElementById('setup-screen').style.display = "none";
+        document.getElementById('game-screen').style.display = "block";
+        document.getElementById('game-status').innerText = "Modus: " + name;
     }
 
     async function loadSong(id) {
-        try {
-            const res = await fetch('songs.json');
-            const songs = await res.json();
-            if (songs[id]) {
-                document.getElementById('status').innerText = "TRACK #" + id;
-                document.getElementById('player-area').style.display = "block";
-                scWidget.load(songs[id], { visual: false, auto_play: false, show_artwork: false, color: "ff5500" });
-            }
-        } catch (e) { console.error(e); }
+        if (!currentPlaylist) return;
+        
+        const song = allPlaylists[currentPlaylist][id];
+        if (song) {
+            // Zeige Artist - Titel zur Kontrolle für den Admin/Scanner
+            document.getElementById('game-status').innerText = `${song.artist} - ${song.title}`;
+            document.getElementById('player-area').style.display = "block";
+            
+            scWidget.load(song.url, { 
+                visual: false, 
+                auto_play: true, 
+                show_artwork: false, 
+                color: "ff5500" 
+            });
+        } else {
+            alert("ID '" + id + "' wurde in der Playlist '" + currentPlaylist + "' nicht gefunden!");
+        }
     }
+
+    // --- DEINE BESTEHENDEN FUNKTIONEN (Bleiben gleich) ---
 
     function toggleMode() {
         const clipper = document.getElementById('clipper');
         const frame = document.getElementById('sc-frame');
         const btn = document.getElementById('mode-btn');
-
         if (!isLocked) {
             clipper.className = "clipper-play";
-            frame.className = "frame-pos-play";
             btn.innerText = "Titel anzeigen";
             isLocked = true;
         } else {
             clipper.className = "clipper-setup";
-            frame.className = "frame-pos-setup";
             btn.innerText = "Titel verstecken";
             isLocked = false;
         }
     }
 
+    function toggleRave() { document.getElementById('body').classList.toggle('rave-active'); }
     function manualId() { const id = prompt("ID:"); if (id) loadSong(id); }
 
     function toggleScanner() {
@@ -253,11 +296,18 @@
             readerEl.style.display = 'block';
             html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-                const id = new URL(text).searchParams.get("id");
-                if (id) { html5QrCode.stop().then(() => { readerEl.style.display = 'none'; loadSong(id); }); }
+                const url = new URL(text);
+                const id = url.searchParams.get("id");
+                if (id) { 
+                    html5QrCode.stop().then(() => { 
+                        readerEl.style.display = 'none'; 
+                        loadSong(id); 
+                    }); 
+                }
             }, () => {});
         }
     }
 </script>
 </body>
+
 </html>
