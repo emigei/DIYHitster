@@ -248,15 +248,26 @@
         document.getElementById('game-status').innerText = "Modus: " + name;
     }
 
-    async function loadSong(id) {
+        async function loadSong(id) {
         if (!currentPlaylist) return;
         
         const song = allPlaylists[currentPlaylist][id];
         if (song) {
-            // Zeige Artist - Titel zur Kontrolle für den Admin/Scanner
-            document.getElementById('game-status').innerText = `${song.artist} - ${song.title}`;
+            // 1. Nur die ID anzeigen, nicht den Namen!
+            document.getElementById('game-status').innerText = "Track #" + id + " geladen...";
             document.getElementById('player-area').style.display = "block";
             
+            // 2. AUTOMATISCH VERSTECKEN: Fenster auf den kleinen Kreis schalten
+            const clipper = document.getElementById('clipper');
+            const frame = document.getElementById('sc-frame');
+            const btn = document.getElementById('mode-btn');
+            
+            clipper.className = "clipper-play";
+            frame.className = "frame-pos-play";
+            btn.innerText = "Titel anzeigen";
+            isLocked = true;
+
+            // 3. Song in den Player laden
             scWidget.load(song.url, { 
                 visual: false, 
                 auto_play: true, 
@@ -267,6 +278,7 @@
             alert("ID '" + id + "' wurde in der Playlist '" + currentPlaylist + "' nicht gefunden!");
         }
     }
+
 
     // --- DEINE BESTEHENDEN FUNKTIONEN (Bleiben gleich) ---
 
