@@ -230,16 +230,57 @@
     };
 
     function setupPlaylistMenu() {
-        const container = document.getElementById('playlist-buttons');
-        Object.keys(allPlaylists).forEach(name => {
-            const btn = document.createElement('button');
-            btn.className = "action-btn";
-            btn.style.marginBottom = "10px";
-            btn.innerText = name;
-            btn.onclick = () => selectPlaylist(name);
-            container.appendChild(btn);
+    const container = document.getElementById('playlist-buttons');
+    container.innerHTML = ""; // Container leeren
+
+    // 1. Der "ALLE MIXEN" Button (ganz oben)
+    const mixBtn = document.createElement('button');
+    mixBtn.className = "action-btn";
+    mixBtn.style.marginBottom = "20px";
+    mixBtn.style.background = "linear-gradient(45deg, #ff5500, #ff00ff)"; // Spezial-Optik
+    mixBtn.innerText = "🔀 ALLE MIXEN";
+    mixBtn.onclick = () => selectAllMixed();
+    container.appendChild(mixBtn);
+
+    // 2. Die einzelnen Playlist-Buttons
+    Object.keys(allPlaylists).forEach(name => {
+        const btn = document.createElement('button');
+        btn.className = "action-btn";
+        btn.style.marginBottom = "10px";
+        btn.innerText = name;
+        btn.onclick = () => selectPlaylist(name);
+        container.appendChild(btn);
+    });
+}
+
+function selectAllMixed() {
+    // Wir erstellen ein neues, flaches Objekt aus allen Playlists
+    let mixedSongs = {};
+    
+    Object.keys(allPlaylists).forEach(playlistName => {
+        const songs = allPlaylists[playlistName];
+        Object.keys(songs).forEach(id => {
+            // Wir speichern den Song unter seiner ID. 
+            // Achtung: Wenn IDs doppelt vorkommen, überschreibt die letzte die vorherige.
+            mixedSongs[id] = songs[id];
         });
-    }
+    });
+
+    currentPlaylistData = mixedSongs; // Wir nutzen direkt die Daten
+    document.getElementById('setup-screen').style.display = "none";
+    document.getElementById('game-screen').style.display = "block";
+    document.getElementById('game-status').innerText = "Modus: 🔀 Gemischt (Alle)";
+}
+
+// Diese Variable brauchen wir global, um flexibel zu sein
+let currentPlaylistData = null;
+
+function selectPlaylist(name) {
+    currentPlaylistData = allPlaylists[name];
+    document.getElementById('setup-screen').style.display = "none";
+    document.getElementById('game-screen').style.display = "block";
+    document.getElementById('game-status').innerText = "Modus: " + name;
+}
 
     function selectPlaylist(name) {
         currentPlaylist = name;
@@ -248,36 +289,33 @@
         document.getElementById('game-status').innerText = "Modus: " + name;
     }
 
-        async function loadSong(id) {
-        if (!currentPlaylist) return;
+    async function loadSong(id) {
+    if (!currentPlaylistData) return;
+    
+    const song = currentPlaylistData[id]; // Sucht direkt in der gewählten Datenmenge
+    if (song) {
+        document.getElementById('game-status').innerText = "Track #" + id + " geladen...";
+        document.getElementById('player-area').style.display = "block";
         
-        const song = allPlaylists[currentPlaylist][id];
-        if (song) {
-            // 1. Nur die ID anzeigen, nicht den Namen!
-            document.getElementById('game-status').innerText = "Track #" + id + " geladen...";
-            document.getElementById('player-area').style.display = "block";
-            
-            // 2. AUTOMATISCH VERSTECKEN: Fenster auf den kleinen Kreis schalten
-            const clipper = document.getElementById('clipper');
-            const frame = document.getElementById('sc-frame');
-            const btn = document.getElementById('mode-btn');
-            
-            clipper.className = "clipper-play";
-            frame.className = "frame-pos-play";
-            btn.innerText = "Titel anzeigen";
-            isLocked = true;
+        // Auto-Verstecken (wie gewünscht)
+        const clipper = document.getElementById('clipper');
+        const frame = document.getElementById('sc-frame');
+        const btn = document.getElementById('mode-btn');
+        clipper.className = "clipper-play";
+        frame.className = "frame-pos-play";
+        btn.innerText = "Titel anzeigen";
+        isLocked = true;
 
-            // 3. Song in den Player laden
-            scWidget.load(song.url, { 
-                visual: false, 
-                auto_play: true, 
-                show_artwork: false, 
-                color: "ff5500" 
-            });
-        } else {
-            alert("ID '" + id + "' wurde in der Playlist '" + currentPlaylist + "' nicht gefunden!");
-        }
+        scWidget.load(song.url, { 
+            visual: false, 
+            auto_play: true, 
+            show_artwork: false, 
+            color: "ff5500" 
+        });
+    } else {
+        alert("ID '" + id + "' wurde nicht gefunden!");
     }
+}
 
 
     // --- DEINE BESTEHENDEN FUNKTIONEN (Bleiben gleich) ---
