@@ -229,48 +229,54 @@
         }
     };
 
-    function setupPlaylistMenu() {
-    const container = document.getElementById('playlist-buttons');
-    container.innerHTML = ""; // Container leeren
+function setupPlaylistMenu() {
+        const container = document.getElementById('playlist-buttons');
+        container.innerHTML = ""; 
 
-    // 1. Der "ALLE MIXEN" Button (ganz oben)
-    const mixBtn = document.createElement('button');
-    mixBtn.className = "action-btn";
-    mixBtn.style.marginBottom = "20px";
-    mixBtn.style.background = "linear-gradient(45deg, #ff5500, #ff00ff)"; // Spezial-Optik
-    mixBtn.innerText = "🔀 ALLE MIXEN";
-    mixBtn.onclick = () => selectAllMixed();
-    container.appendChild(mixBtn);
+        // 1. ALLE MIXEN Button
+        const mixBtn = document.createElement('button');
+        mixBtn.className = "action-btn";
+        mixBtn.style.marginBottom = "20px";
+        mixBtn.style.background = "linear-gradient(45deg, #ff5500, #ff00ff)";
+        mixBtn.innerText = "🔀 ALLE MIXEN";
+        mixBtn.onclick = () => selectAllMixed();
+        container.appendChild(mixBtn);
 
-    // 2. Die einzelnen Playlist-Buttons
-    Object.keys(allPlaylists).forEach(name => {
-        const btn = document.createElement('button');
-        btn.className = "action-btn";
-        btn.style.marginBottom = "10px";
-        btn.innerText = name;
-        btn.onclick = () => selectPlaylist(name);
-        container.appendChild(btn);
-    });
-}
-
-function selectAllMixed() {
-    // Wir erstellen ein neues, flaches Objekt aus allen Playlists
-    let mixedSongs = {};
-    
-    Object.keys(allPlaylists).forEach(playlistName => {
-        const songs = allPlaylists[playlistName];
-        Object.keys(songs).forEach(id => {
-            // Wir speichern den Song unter seiner ID. 
-            // Achtung: Wenn IDs doppelt vorkommen, überschreibt die letzte die vorherige.
-            mixedSongs[id] = songs[id];
+        // 2. Einzelne Playlists
+        Object.keys(allPlaylists).forEach(name => {
+            const btn = document.createElement('button');
+            btn.className = "action-btn";
+            btn.style.marginBottom = "10px";
+            btn.innerText = name;
+            btn.onclick = () => selectPlaylist(name);
+            container.appendChild(btn);
         });
-    });
+    }
 
-    currentPlaylistData = mixedSongs; // Wir nutzen direkt die Daten
-    document.getElementById('setup-screen').style.display = "none";
-    document.getElementById('game-screen').style.display = "block";
-    document.getElementById('game-status').innerText = "Modus: 🔀 Gemischt (Alle)";
-}
+    let currentPlaylistData = null; // Wichtig: Diese Variable muss existieren
+
+    function selectAllMixed() {
+        let mixedSongs = {};
+        Object.keys(allPlaylists).forEach(playlistName => {
+            const songs = allPlaylists[playlistName];
+            Object.keys(songs).forEach(id => {
+                if(id !== "color") { // Farbe nicht als Song laden
+                    mixedSongs[id] = songs[id];
+                }
+            });
+        });
+        currentPlaylistData = mixedSongs;
+        document.getElementById('setup-screen').style.display = "none";
+        document.getElementById('game-screen').style.display = "block";
+        document.getElementById('game-status').innerText = "Modus: 🔀 Gemischt";
+    }
+
+    function selectPlaylist(name) {
+        currentPlaylistData = allPlaylists[name];
+        document.getElementById('setup-screen').style.display = "none";
+        document.getElementById('game-screen').style.display = "block";
+        document.getElementById('game-status').innerText = "Modus: " + name;
+    }
 
 // Diese Variable brauchen wir global, um flexibel zu sein
 let currentPlaylistData = null;
@@ -359,5 +365,6 @@ function selectPlaylist(name) {
     }
 </script>
 </body>
+
 
 </html>
