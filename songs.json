@@ -1,15 +1,16 @@
 {
     "80er Party": {
       "color": "#ff1493",
-      "1": { "url": "https://soundcloud.com/kealasettle/this-is-me?in=tinki-rider/sets/80er-90er-2000er-hitmix", "year": "1984", "title": "Self Control", "artist": "Laura Branigan" },
-      "2": { "url": "https://soundcloud.com/kealasettle/this-is-me?", "year": "1982", "title": "Thriller", "artist": "Michael Jackson" }
+      "1": { "url": "https://soundcloud.com/lorcan-bolger/put-your-back-in-it-gabber-kick?si=469d0ecde32a48a8a63b18a8eeeac189&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing", "year": "1984", "title": "Self Control", "artist": "Laura Branigan" },
+      "2": { "https://soundcloud.com/flashgea/top-billin-flash-remix?si=604f6c5522c54732bbe8cd405921710a&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing", "year": "1982", "title": "Thriller", "artist": "Michael Jackson" }
     },
     "90er Rave": {
         "color": "#00ffff",
-      "3": { "url": "https://soundcloud.com/djdavidpuentez/superstar?", "year": "1994", "title": "Innsane", "artist": "Hithunter" }
+      "3": { "url": "https://soundcloud.com/flashgea/took-the-night-maelin?si=f7ba3d0e792c4e208e0580e0e8fef2f7&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing", "year": "1994", "title": "Innsane", "artist": "Hithunter" }
     },
     "Charts 2020": {
         "color": "#32cd32",
-      "4": { "url": "https://soundcloud.com/wearegalantis/galantis-david-guetta-little-mix-heartbreak-", "year": "2020", "title": "Blinding Lights", "artist": "The Weeknd" }
+      "4": { "url": "https://soundcloud.com/plattenlieferantog/ono-cliq-hausverbot?si=e66a24910eb94c31a80e9daefe30a3fb&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing", "year": "2020", "title": "Blinding Lights", "artist": "The Weeknd" }
     }
+
   }
