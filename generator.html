@@ -36,10 +36,10 @@
             -webkit-print-color-adjust: exact; print-color-adjust: exact;
         }
 
-        .front { background-image: url('QR-CODE-SEITE.jpg'); }
+        .front { background-image: url('QR-CODE-SEITE.png'); }
         
         .back { 
-            background-image: url('TITEL+JAHRESZAHL SEITE.jpg'); 
+            background-image: url('TITEL+JAHRESZAHL_SEITE.png'); 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
             padding: 55px; box-sizing: border-box; text-align: center;
             position: relative; overflow: hidden;
@@ -63,7 +63,7 @@
 
         .info-title { font-size: 20px; font-weight: bold; width: 100%; max-width: 270px; margin-bottom: 5px; text-transform: uppercase; text-shadow: 0 2px 4px #000; overflow-wrap: break-word; line-height: 1.1; }
         .info-artist { font-size: 16px; color: #ff5500; width: 100%; max-width: 270px; font-weight: bold; margin-bottom: 15px; text-shadow: 0 2px 4px #000; overflow-wrap: break-word; }
-        .info-year { font-size: 60px; font-weight: 900; color: #fff; margin: 0; text-shadow: 0 0 20px rgba(255,85,0,0.8); line-height: 1; }
+        .info-year { font-size: 60px; font-weight: 900; color: #fff; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); line-height: 1; }
         .info-label { font-size: 10px; text-transform: uppercase; color: #bbb; margin-top: 5px; letter-spacing: 1px; }
 
         @media print {
@@ -125,7 +125,7 @@
                         <div class="card front">
                             <div class="qr-wrapper" id="qr-${id}"></div>
                         </div>
-                        <div class="card back" style="background-image: url('RUECKSEITE_STANDARD.jpg');">
+                        <div class="card back" style="background-image: url('TITEL+JAHRESZAHL_SEITE.png');">
                             <div class="info-title">${song.title}</div>
                             <div class="info-artist">${song.artist}</div>
                             <div class="info-year" style="color: ${yearColor};">${song.year}</div>

@@ -1,22 +1,15 @@
 {
-  "80er Party": {
-    "image": "TITEL+JAHRESZAHL_SEITE_pink.jpg",
-    "1": { "url": "...", "year": "1984", "title": "Self Control", "artist": "Laura Branigan" }
-  },
-  "90er Rave": {
-    "image": "TITEL+JAHRESZAHL_SEITE_türkis.jpg",
-    "3": { "url": "...", "year": "1994", "title": "Innsane", "artist": "Hithunter" }
-  },
-  "Charts 2020": {
-    "image": "TITEL+JAHRESZAHL_SEITE_grün.jpg",
-    "4": { "url": "...", "year": "2020", "title": "Blinding Lights", "artist": "The Weeknd" }
-  },
-  "Sonstiges": {
-    "image": "TITEL+JAHRESZAHL_SEITE_orange.jpg",
-    "5": { "url": "...", "year": "2023", "title": "Song", "artist": "Artist" }
-  },
-  "blahblah": {
-    "image": "TITEL+JAHRESZAHL_SEITE_weiss.jpg",
-    "5": { "url": "...", "year": "2023", "title": "Song", "artist": "Artist" }
+    "80er Party": {
+      "color": "#ff1493",
+      "1": { "url": "https://soundcloud.com/kealasettle/this-is-me?in=tinki-rider/sets/80er-90er-2000er-hitmix", "year": "1984", "title": "Self Control", "artist": "Laura Branigan" },
+      "2": { "url": "https://soundcloud.com/kealasettle/this-is-me?", "year": "1982", "title": "Thriller", "artist": "Michael Jackson" }
+    },
+    "90er Rave": {
+        "color": "#00ffff",
+      "3": { "url": "https://soundcloud.com/djdavidpuentez/superstar?", "year": "1994", "title": "Innsane", "artist": "Hithunter" }
+    },
+    "Charts 2020": {
+        "color": "#32cd32",
+      "4": { "url": "https://soundcloud.com/wearegalantis/galantis-david-guetta-little-mix-heartbreak-", "year": "2020", "title": "Blinding Lights", "artist": "The Weeknd" }
+    }
   }
-}
