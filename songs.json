@@ -8,11 +8,15 @@
     "3": { "url": "...", "year": "1994", "title": "Innsane", "artist": "Hithunter" }
   },
   "Charts 2020": {
-    "image": "TITEL+JAHRESZAHL_SEITE_grün_weiss.jpg",
+    "image": "TITEL+JAHRESZAHL_SEITE_grün.jpg",
     "4": { "url": "...", "year": "2020", "title": "Blinding Lights", "artist": "The Weeknd" }
   },
   "Sonstiges": {
     "image": "TITEL+JAHRESZAHL_SEITE_orange.jpg",
+    "5": { "url": "...", "year": "2023", "title": "Song", "artist": "Artist" }
+  },
+  "blahblah": {
+    "image": "TITEL+JAHRESZAHL_SEITE_weiss.jpg",
     "5": { "url": "...", "year": "2023", "title": "Song", "artist": "Artist" }
   }
 }
