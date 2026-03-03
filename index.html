@@ -11,7 +11,7 @@
             --orange: #ff5500; 
             --bg: #0d0d0d; 
             --card-bg: rgba(22, 22, 22, 0.95);
-            --vinyl-gray: #252525; /* Deutlich helleres Grau statt Schwarz */
+            --vinyl-gray: #252525; 
         }
 
         /* --- VERBESSERTE, HELLE VINYL ANIMATION --- */
@@ -32,12 +32,10 @@
             animation: rotateVinyl 10s linear infinite;
         }
 
-        /* Die Schallplatte selbst */
         .vinyl-record {
             position: absolute;
             width: 100%;
             height: 100%;
-            /* Hellere Rillen-Optik */
             background: repeating-radial-gradient(
                 circle at center,
                 var(--vinyl-gray) 0px,
@@ -46,12 +44,10 @@
                 var(--vinyl-gray) 3px
             );
             border-radius: 50%;
-            /* Sichtbarer Rahmen um die Platte */
             border: 4px solid #444; 
             box-shadow: 0 0 40px rgba(255, 85, 0, 0.2), inset 0 0 60px rgba(0,0,0,0.5);
         }
 
-        /* Verstärkter Lichtkegel (Glanz) */
         .vinyl-record::after {
             content: "";
             position: absolute;
@@ -59,7 +55,7 @@
             background: conic-gradient(
                 from 0deg,
                 transparent 0%,
-                rgba(255,255,255,0.15) 10%, /* Hellerer Glanz */
+                rgba(255,255,255,0.15) 10%, 
                 transparent 25%,
                 transparent 45%,
                 rgba(255,255,255,0.15) 50%,
@@ -69,12 +65,11 @@
             border-radius: 50%;
         }
 
-        /* Äußerer glühender Ring */
         .vinyl-ring {
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            border: 2px solid rgba(255, 85, 0, 0.3); /* Helleres Orange */
+            border: 2px solid rgba(255, 85, 0, 0.3);
             border-radius: 50%;
             box-shadow: 0 0 15px rgba(255, 85, 0, 0.1);
         }
@@ -127,6 +122,17 @@
             box-shadow: 0 15px 45px rgba(0,0,0,0.9);
         }
 
+        /* --- NEU: PLAYLIST ITEM STYLING --- */
+        .playlist-item {
+            display: flex; align-items: center; background: rgba(255,255,255,0.05);
+            margin-bottom: 8px; border-radius: 12px; padding: 5px 15px; border: 1px solid #333;
+        }
+        .playlist-name-btn {
+            background: none; border: none; color: white; flex-grow: 1; text-align: left;
+            padding: 12px; font-weight: bold; cursor: pointer; font-size: 16px;
+        }
+        .playlist-checkbox { transform: scale(1.3); cursor: pointer; accent-color: var(--orange); }
+
         /* --- RAVE AKTIV --- */
         .rave-active { animation: strobo 0.1s infinite !important; }
         .rave-active .bg-animation { display: none; } 
@@ -140,7 +146,7 @@
             background: #000; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
         }
-        .clipper-setup { width: 310px; height: 220px; border-radius: 16px; overflow-x: auto !important; }
+        .clipper-setup { width: 310px; height: 220px; border-radius: 16px; }
         .clipper-play { width: 50px; height: 50px; border-radius: 50%; }
 
         #sc-frame { position: absolute; width: 600px; height: 220px; border: none; }
@@ -176,8 +182,10 @@
 
 <div id="setup-screen" class="card">
     <div id="status">Wähle eine Playlist</div>
-    <div id="playlist-buttons" style="margin-top: 20px;">
-        </div>
+    <div id="playlist-buttons" style="margin-top: 20px; max-height: 300px; overflow-y: auto;">
+    </div>
+    <button class="action-btn" onclick="startCustomMix()" style="background: var(--orange);">✓ Auswahl mixen</button>
+    <button class="action-btn" onclick="selectAllMixed()" style="background: linear-gradient(45deg, #ff5500, #ff00ff); margin-top: 10px;">🔀 ALLE MIXEN</button>
 </div>
 
 <div id="game-screen" style="display:none;">
@@ -205,120 +213,95 @@
     let html5QrCode;
     let isLocked = false;
     let scWidget;
-    let currentPlaylist = null;
     let allPlaylists = {};
+    let currentPlaylistData = null;
 
     window.onload = async () => {
         scWidget = SC.Widget(document.getElementById('sc-frame'));
-        
-        // Songs laden
         try {
             const res = await fetch('songs.json');
             allPlaylists = await res.json();
             setupPlaylistMenu();
         } catch (e) { 
-            console.error("JSON Fehler:", e); 
-            document.getElementById('status').innerText = "Fehler beim Laden der songs.json";
-        }
-
-        // Falls ID in URL (Direktstart)
-        const id = new URLSearchParams(window.location.search).get('id');
-        if (id) {
-            // Wenn eine ID da ist, muss man raten, aus welcher Playlist sie kommt 
-            // oder man nutzt eine "Default" Playlist.
+            document.getElementById('status').innerText = "Fehler beim Laden!";
         }
     };
 
     function setupPlaylistMenu() {
-    const container = document.getElementById('playlist-buttons');
-    container.innerHTML = ""; // Container leeren
+        const container = document.getElementById('playlist-buttons');
+        container.innerHTML = "";
 
-    // 1. Der "ALLE MIXEN" Button (ganz oben)
-    const mixBtn = document.createElement('button');
-    mixBtn.className = "action-btn";
-    mixBtn.style.marginBottom = "20px";
-    mixBtn.style.background = "linear-gradient(45deg, #ff5500, #ff00ff)"; // Spezial-Optik
-    mixBtn.innerText = "🔀 ALLE MIXEN";
-    mixBtn.onclick = () => selectAllMixed();
-    container.appendChild(mixBtn);
-
-    // 2. Die einzelnen Playlist-Buttons
-    Object.keys(allPlaylists).forEach(name => {
-        const btn = document.createElement('button');
-        btn.className = "action-btn";
-        btn.style.marginBottom = "10px";
-        btn.innerText = name;
-        btn.onclick = () => selectPlaylist(name);
-        container.appendChild(btn);
-    });
-}
-
-function selectAllMixed() {
-    // Wir erstellen ein neues, flaches Objekt aus allen Playlists
-    let mixedSongs = {};
-    
-    Object.keys(allPlaylists).forEach(playlistName => {
-        const songs = allPlaylists[playlistName];
-        Object.keys(songs).forEach(id => {
-            // Wir speichern den Song unter seiner ID. 
-            // Achtung: Wenn IDs doppelt vorkommen, überschreibt die letzte die vorherige.
-            mixedSongs[id] = songs[id];
+        Object.keys(allPlaylists).forEach(name => {
+            const item = document.createElement('div');
+            item.className = "playlist-item";
+            item.innerHTML = `
+                <button class="playlist-name-btn" onclick="selectPlaylist('${name}')">${name}</button>
+                <input type="checkbox" class="playlist-checkbox" value="${name}">
+            `;
+            container.appendChild(item);
         });
-    });
-
-    currentPlaylistData = mixedSongs; // Wir nutzen direkt die Daten
-    document.getElementById('setup-screen').style.display = "none";
-    document.getElementById('game-screen').style.display = "block";
-    document.getElementById('game-status').innerText = "Modus: 🔀 Gemischt (Alle)";
-}
-
-// Diese Variable brauchen wir global, um flexibel zu sein
-let currentPlaylistData = null;
-
-function selectPlaylist(name) {
-    currentPlaylistData = allPlaylists[name];
-    document.getElementById('setup-screen').style.display = "none";
-    document.getElementById('game-screen').style.display = "block";
-    document.getElementById('game-status').innerText = "Modus: " + name;
-}
+    }
 
     function selectPlaylist(name) {
-        currentPlaylist = name;
+        currentPlaylistData = allPlaylists[name];
+        startGame("Modus: " + name);
+    }
+
+    function startCustomMix() {
+        const checkboxes = document.querySelectorAll('.playlist-checkbox:checked');
+        if (checkboxes.length === 0) {
+            alert("Bitte wähle mindestens eine Playlist aus!");
+            return;
+        }
+        let mixedSongs = {};
+        checkboxes.forEach(cb => {
+            const songs = allPlaylists[cb.value];
+            Object.keys(songs).forEach(id => {
+                if(id !== "image" && id !== "color") mixedSongs[id] = songs[id];
+            });
+        });
+        currentPlaylistData = mixedSongs;
+        startGame("Modus: Eigener Mix");
+    }
+
+    function selectAllMixed() {
+        let mixedSongs = {};
+        Object.keys(allPlaylists).forEach(pName => {
+            const songs = allPlaylists[pName];
+            Object.keys(songs).forEach(id => {
+                if(id !== "image" && id !== "color") mixedSongs[id] = songs[id];
+            });
+        });
+        currentPlaylistData = mixedSongs;
+        startGame("Modus: 🔀 Alles gemischt");
+    }
+
+    function startGame(statusText) {
         document.getElementById('setup-screen').style.display = "none";
         document.getElementById('game-screen').style.display = "block";
-        document.getElementById('game-status').innerText = "Modus: " + name;
+        document.getElementById('game-status').innerText = statusText;
     }
 
     async function loadSong(id) {
-    if (!currentPlaylistData) return;
-    
-    const song = currentPlaylistData[id]; // Sucht direkt in der gewählten Datenmenge
-    if (song) {
-        document.getElementById('game-status').innerText = "Track #" + id + " geladen...";
-        document.getElementById('player-area').style.display = "block";
-        
-        // Auto-Verstecken (wie gewünscht)
-        const clipper = document.getElementById('clipper');
-        const frame = document.getElementById('sc-frame');
-        const btn = document.getElementById('mode-btn');
-        clipper.className = "clipper-play";
-        frame.className = "frame-pos-play";
-        btn.innerText = "Titel anzeigen";
-        isLocked = true;
+        if (!currentPlaylistData) selectAllMixed();
+        const song = currentPlaylistData[id];
+        if (song) {
+            document.getElementById('game-status').innerText = "Track #" + id + " geladen...";
+            document.getElementById('player-area').style.display = "block";
+            
+            const clipper = document.getElementById('clipper');
+            const frame = document.getElementById('sc-frame');
+            const btn = document.getElementById('mode-btn');
+            clipper.className = "clipper-play";
+            frame.className = "frame-pos-play";
+            btn.innerText = "Titel anzeigen";
+            isLocked = true;
 
-        scWidget.load(song.url, { 
-            visual: false, 
-            auto_play: true, 
-            show_artwork: false, 
-            color: "ff5500" 
-        });
-    } else {
-        alert("ID '" + id + "' wurde nicht gefunden!");
+            scWidget.load(song.url, { visual: false, auto_play: true, show_artwork: false, color: "ff5500" });
+        } else {
+            alert("ID '" + id + "' nicht gefunden!");
+        }
     }
-}
-
-
-    // --- DEINE BESTEHENDEN FUNKTIONEN (Bleiben gleich) ---
 
     function toggleMode() {
         const clipper = document.getElementById('clipper');
@@ -326,10 +309,12 @@ function selectPlaylist(name) {
         const btn = document.getElementById('mode-btn');
         if (!isLocked) {
             clipper.className = "clipper-play";
+            frame.className = "frame-pos-play";
             btn.innerText = "Titel anzeigen";
             isLocked = true;
         } else {
             clipper.className = "clipper-setup";
+            frame.className = "frame-pos-setup";
             btn.innerText = "Titel verstecken";
             isLocked = false;
         }
@@ -359,5 +344,4 @@ function selectPlaylist(name) {
     }
 </script>
 </body>
-
 </html>
