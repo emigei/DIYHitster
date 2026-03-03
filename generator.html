@@ -109,12 +109,11 @@
 
         for (const playlistName in allPlaylists) {
             const playlist = allPlaylists[playlistName];
-            // Hier holen wir das spezifische Bild für diese Playlist
-            const bgImage = playlist.image || 'TITEL+JAHRESZAHL_SEITE_orange.jpg';
+            // Wir holen die Farbe für die Jahreszahl (Standard: Orange, falls nichts definiert ist)
+            const yearColor = playlist.color || "#ff5500";
 
             for (const id in playlist) {
-                // Wir überspringen das Feld "image", da es kein Song ist
-                if (id === "image") continue;
+                if (id === "color") continue;
 
                 const numericId = parseInt(id);
                 if (!isNaN(numericId) && numericId >= from && numericId <= to) {
@@ -126,10 +125,10 @@
                         <div class="card front">
                             <div class="qr-wrapper" id="qr-${id}"></div>
                         </div>
-                        <div class="card back" style="background-image: url('${bgImage}');">
+                        <div class="card back" style="background-image: url('RUECKSEITE_STANDARD.jpg');">
                             <div class="info-title">${song.title}</div>
                             <div class="info-artist">${song.artist}</div>
-                            <div class="info-year">${song.year}</div>
+                            <div class="info-year" style="color: ${yearColor};">${song.year}</div>
                             <div class="info-label">Original-Erstausgabe</div>
                         </div>
                     `;
@@ -145,7 +144,6 @@
             }
         }
     }
-
     init();
 </script>
 </body>
