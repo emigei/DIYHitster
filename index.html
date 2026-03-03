@@ -284,19 +284,27 @@
     };
 
     function setupPlaylistMenu() {
-        const container = document.getElementById('playlist-buttons');
-        container.innerHTML = "";
+    const container = document.getElementById('playlist-buttons');
+    container.innerHTML = "";
 
-        Object.keys(allPlaylists).forEach(name => {
-            const item = document.createElement('div');
-            item.className = "playlist-item";
-            item.innerHTML = `
-                <button class="playlist-name-btn" onclick="selectPlaylist('${name}')">${name}</button>
-                <input type="checkbox" class="playlist-checkbox" value="${name}">
-            `;
-            container.appendChild(item);
-        });
-    }
+    Object.keys(allPlaylists).forEach(name => {
+        const playlist = allPlaylists[name];
+        const color = playlist.color || "#ff5500"; // Fallback auf Orange
+        
+        const item = document.createElement('div');
+        item.className = "playlist-item";
+        // Wir setzen die Farbe als CSS-Variable für dieses spezielle Item
+        item.style.setProperty('--item-color', color);
+        item.style.borderLeft = `5px solid ${color}`; // Farblicher Akzent links
+
+        item.innerHTML = `
+            <button class="playlist-name-btn" onclick="selectPlaylist('${name}')">${name}</button>
+            <input type="checkbox" class="playlist-checkbox" value="${name}">
+        `;
+        container.appendChild(item);
+    });
+}
+
 
     function selectPlaylist(name) {
         currentPlaylistData = allPlaylists[name];
