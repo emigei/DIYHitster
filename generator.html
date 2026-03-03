@@ -44,12 +44,13 @@
             padding: 55px; box-sizing: border-box; text-align: center;
             position: relative; overflow: hidden;
         }
-
-        /* Farb-Layer für die Playlist-Sortierung */
-        .back::after {
-            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--playlist-bg-color, transparent);
-            opacity: 0.6; z-index: 1;
+        .back { 
+            /* Kein festes Background-Image hier, das machen wir per JS */
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            padding: 55px; box-sizing: border-box; text-align: center;
+            position: relative; overflow: hidden;
+            background-size: cover;
+            background-position: center;
         }
 
         .qr-wrapper {
@@ -106,17 +107,18 @@
         const output = document.getElementById('output');
         output.innerHTML = ""; 
 
-        // Wir gehen durch alle Playlists in der JSON
         for (const playlistName in allPlaylists) {
-            const songs = allPlaylists[playlistName];
-            const playlistColor = songs.color || "transparent";
+            const playlist = allPlaylists[playlistName];
+            // Hier holen wir das spezifische Bild für diese Playlist
+            const bgImage = playlist.image || 'TITEL+JAHRESZAHL_SEITE_orange.jpg';
 
-            for (const id in songs) {
+            for (const id in playlist) {
+                // Wir überspringen das Feld "image", da es kein Song ist
+                if (id === "image") continue;
+
                 const numericId = parseInt(id);
-                
-                // Prüfen ob die ID im gewählten Bereich liegt
                 if (!isNaN(numericId) && numericId >= from && numericId <= to) {
-                    const song = songs[id];
+                    const song = playlist[id];
                     const pair = document.createElement('div');
                     pair.className = 'card-pair';
                     
@@ -124,7 +126,7 @@
                         <div class="card front">
                             <div class="qr-wrapper" id="qr-${id}"></div>
                         </div>
-                        <div class="card back" style="--playlist-bg-color: ${playlistColor};">
+                        <div class="card back" style="background-image: url('${bgImage}');">
                             <div class="info-title">${song.title}</div>
                             <div class="info-artist">${song.artist}</div>
                             <div class="info-year">${song.year}</div>

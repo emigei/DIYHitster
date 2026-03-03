@@ -11,79 +11,143 @@
             --orange: #ff5500; 
             --bg: #0d0d0d; 
             --card-bg: rgba(22, 22, 22, 0.95);
-            --vinyl-gray: #252525;
-            --playlist-glow: rgba(255, 85, 0, 0.3); /* Standard-Glühen */
+            --vinyl-gray: #252525; /* Deutlich helleres Grau statt Schwarz */
         }
 
+        /* --- VERBESSERTE, HELLE VINYL ANIMATION --- */
         .bg-animation {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: -1;
             background: radial-gradient(circle at center, #202020 0%, #0a0a0a 100%);
-            display: flex; align-items: center; justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .vinyl-container {
             position: relative;
-            width: 550px; height: 550px;
+            width: 550px;
+            height: 550px;
             animation: rotateVinyl 10s linear infinite;
         }
 
+        /* Die Schallplatte selbst */
         .vinyl-record {
             position: absolute;
-            width: 100%; height: 100%;
-            background: repeating-radial-gradient(circle at center, var(--vinyl-gray) 0px, var(--vinyl-gray) 1px, #333 2px, var(--vinyl-gray) 3px);
+            width: 100%;
+            height: 100%;
+            /* Hellere Rillen-Optik */
+            background: repeating-radial-gradient(
+                circle at center,
+                var(--vinyl-gray) 0px,
+                var(--vinyl-gray) 1px,
+                #333 2px,
+                var(--vinyl-gray) 3px
+            );
             border-radius: 50%;
+            /* Sichtbarer Rahmen um die Platte */
             border: 4px solid #444; 
-            box-shadow: 0 0 40px var(--playlist-glow), inset 0 0 60px rgba(0,0,0,0.5);
-            transition: box-shadow 1s ease;
+            box-shadow: 0 0 40px rgba(255, 85, 0, 0.2), inset 0 0 60px rgba(0,0,0,0.5);
         }
 
+        /* Verstärkter Lichtkegel (Glanz) */
         .vinyl-record::after {
-            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: conic-gradient(from 0deg, transparent 0%, rgba(255,255,255,0.15) 10%, transparent 25%, transparent 45%, rgba(255,255,255,0.15) 50%, transparent 75%, transparent 100%);
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: conic-gradient(
+                from 0deg,
+                transparent 0%,
+                rgba(255,255,255,0.15) 10%, /* Hellerer Glanz */
+                transparent 25%,
+                transparent 45%,
+                rgba(255,255,255,0.15) 50%,
+                transparent 75%,
+                transparent 100%
+            );
             border-radius: 50%;
         }
 
+        /* Äußerer glühender Ring */
         .vinyl-ring {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            border: 2px solid var(--playlist-glow);
-            border-radius: 50%; transition: all 1s ease;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid rgba(255, 85, 0, 0.3); /* Helleres Orange */
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(255, 85, 0, 0.1);
         }
 
-        @keyframes rotateVinyl { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes rotateVinyl {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
 
-        /* RAVE MODE */
-        .rave-active { animation: strobo 0.1s infinite !important; }
-        @keyframes strobo { 0% { background: #000; } 50% { background: #b8b7b7; } 100% { background: #000; } }
-        .rave-active .bg-animation { display: none; } 
-        .rave-active .card { animation: shake 0.1s infinite; border-color: #ff00ff; }
-        @keyframes shake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-3px, 2px); } 100% { transform: translate(1px, -1px); } }
+        /* --- RAVE ANIMATIONEN --- */
+        @keyframes strobo {
+            0% { background: #000; }
+            50% { background: #b8b7b7; }
+            100% { background: #000; }
+        }
 
+        @keyframes raveColorsA {
+            0% { border-color: #ff00ff; box-shadow: 0 0 30px #ff00ff; color: #ff00ff; }
+            33% { border-color: #00ffff; box-shadow: 0 0 30px #00ffff; color: #00ffff; }
+            66% { border-color: #ffff00; box-shadow: 0 0 30px #ffff00; color: #ffff00; }
+            100% { border-color: #ff00ff; box-shadow: 0 0 30px #ff00ff; color: #ff00ff; }
+        }
+
+        @keyframes raveColorsB {
+            0% { border-color: #ffff00; box-shadow: 0 0 40px #ffff00; border:4px solid #ffff00; background: #ffff00;}
+            33% { border-color: #ff00ff; box-shadow: 0 0 40px #ff00ff; border:4px solid #ff00ff; background: #ff00ff;}
+            66% { border-color: #00ffff; box-shadow: 0 0 40px #00ffff; border:4px solid #00ffff; background: #00ffff;}
+            100% { border-color: #ffff00; box-shadow: 0 0 40px #ffff00; border:4px solid #ffff00; background: #ffff00;}
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px); }
+            50% { transform: translate(-3px, 2px); }
+            100% { transform: translate(1px, -1px); }
+        }
+
+        /* --- BASIS STYLING --- */
         body { 
             font-family: sans-serif; background: var(--bg); color: white; margin: 0; 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-height: 100vh; overflow: hidden;
+            min-height: 100vh; overflow: hidden; transition: all 0.1s;
         }
 
         .card { 
             background: var(--card-bg); border-radius: 32px; padding: 30px; 
             width: 90%; max-width: 360px; text-align: center; border: 2px solid #444; 
-            position: relative; z-index: 10; backdrop-filter: blur(8px);
+            position: relative; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
+            backdrop-filter: blur(8px);
             box-shadow: 0 15px 45px rgba(0,0,0,0.9);
         }
 
+        /* --- RAVE AKTIV --- */
+        .rave-active { animation: strobo 0.1s infinite !important; }
+        .rave-active .bg-animation { display: none; } 
+        .rave-active .card { animation: raveColorsB 1.5s infinite, shake 0.1s infinite; }
+        .rave-active #clipper { animation: raveColorsA 1.5s infinite !important; }
+        .rave-active .action-btn { animation: raveColorsA 1.5s infinite; border: none; }
+
+        /* --- PLAYER STUFF --- */
         #clipper {
             margin: 20px auto; overflow: hidden; border: 4px solid var(--orange); 
             background: #000; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
         }
-        .clipper-setup { width: 310px; height: 220px; border-radius: 16px; }
+        .clipper-setup { width: 310px; height: 220px; border-radius: 16px; overflow-x: auto !important; }
         .clipper-play { width: 50px; height: 50px; border-radius: 50%; }
 
-        #sc-frame { position: absolute; width: 600px; height: 220px; border: none; top: 0; left: 0; }
-        .frame-pos-play { top: -7px !important; left: -5px !important; } 
+        #sc-frame { position: absolute; width: 600px; height: 220px; border: none; }
+        .frame-pos-setup { top: 0; left: 0; }
+        .frame-pos-play { top: -7px; left: -5px; } 
 
+        /* --- BUTTONS --- */
         .action-btn { 
             background: var(--orange); color: white; border: none; width: 100%; padding: 16px; 
             border-radius: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; 
@@ -94,8 +158,9 @@
             background: #333; color: #999; font-size: 10px; padding: 10px; border: none;
             border-radius: 12px; margin-top: 20px; cursor: pointer; width: 100%;
         }
+        .rave-active .party-btn { background: #fff; color: #000; font-weight: bold; }
 
-        #status, #game-status { color: var(--orange); font-weight: bold; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        #status { color: var(--orange); font-weight: bold; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
         .dev-skip { position: absolute; top: 15px; right: 15px; background: none; border: none; color: #444; font-size: 10px; }
     </style>
 </head>
@@ -103,25 +168,26 @@
 
 <div class="bg-animation">
     <div class="vinyl-container">
-        <div class="vinyl-record" id="v-rec"></div>
-        <div class="vinyl-ring" id="v-r1" style="width: 650px; height: 650px;"></div>
-        <div class="vinyl-ring" id="v-r2" style="width: 780px; height: 780px; opacity: 0.3;"></div>
+        <div class="vinyl-record"></div>
+        <div class="vinyl-ring" style="width: 650px; height: 650px;"></div>
+        <div class="vinyl-ring" style="width: 780px; height: 780px; opacity: 0.3;"></div>
     </div>
 </div>
 
 <div id="setup-screen" class="card">
     <div id="status">Wähle eine Playlist</div>
-    <div id="playlist-buttons" style="margin-top: 20px;"></div>
+    <div id="playlist-buttons" style="margin-top: 20px;">
+        </div>
 </div>
 
 <div id="game-screen" style="display:none;">
     <div class="card">
         <button class="dev-skip" onclick="manualId()">DEV</button>
-        <div id="game-status">Bereit</div>
+        <div id="game-status" style="color: var(--orange); font-weight: bold; margin-bottom: 15px;">Bereit</div>
         
         <div id="player-area" style="display:none;">
             <div id="clipper" class="clipper-setup">
-                <iframe id="sc-frame" scrolling="no" frameborder="no" allow="autoplay" 
+                <iframe id="sc-frame" scrolling="yes" frameborder="no" allow="autoplay" 
                     src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1&show_artwork=false"></iframe>
             </div>
             <button id="mode-btn" class="action-btn" onclick="toggleMode()">Titel verstecken</button>
@@ -139,125 +205,120 @@
     let html5QrCode;
     let isLocked = false;
     let scWidget;
+    let currentPlaylist = null;
     let allPlaylists = {};
-    let currentPlaylistData = null; // Hier speichern wir die Songs der gewählten Playlist
 
     window.onload = async () => {
-        const frame = document.getElementById('sc-frame');
-        scWidget = SC.Widget(frame);
+        scWidget = SC.Widget(document.getElementById('sc-frame'));
         
+        // Songs laden
         try {
             const res = await fetch('songs.json');
-            if (!res.ok) throw new Error("Datei nicht gefunden");
             allPlaylists = await res.json();
             setupPlaylistMenu();
         } catch (e) { 
-            console.error("Fehler:", e);
-            document.getElementById('status').innerText = "Fehler: songs.json nicht gefunden!";
+            console.error("JSON Fehler:", e); 
+            document.getElementById('status').innerText = "Fehler beim Laden der songs.json";
         }
 
-        // Falls ID direkt in URL (für QR-Code Start)
-        const urlParams = new URLSearchParams(window.location.search);
-        const idFromUrl = urlParams.get('id');
-        if (idFromUrl) {
-            // Wenn direkt gestartet wird, mischen wir automatisch alles, 
-            // damit die ID in JEDER Playlist gefunden werden kann
-            setTimeout(() => {
-                selectAllMixed();
-                loadSong(idFromUrl);
-            }, 1000);
+        // Falls ID in URL (Direktstart)
+        const id = new URLSearchParams(window.location.search).get('id');
+        if (id) {
+            // Wenn eine ID da ist, muss man raten, aus welcher Playlist sie kommt 
+            // oder man nutzt eine "Default" Playlist.
         }
     };
 
     function setupPlaylistMenu() {
-        const container = document.getElementById('playlist-buttons');
-        container.innerHTML = "";
+    const container = document.getElementById('playlist-buttons');
+    container.innerHTML = ""; // Container leeren
 
-        // 1. ALLE MIXEN Button
-        const mixBtn = document.createElement('button');
-        mixBtn.className = "action-btn";
-        mixBtn.style.marginBottom = "20px";
-        mixBtn.style.background = "linear-gradient(45deg, #ff5500, #ff00ff)";
-        mixBtn.innerText = "🔀 ALLE MIXEN";
-        mixBtn.onclick = () => selectAllMixed();
-        container.appendChild(mixBtn);
+    // 1. Der "ALLE MIXEN" Button (ganz oben)
+    const mixBtn = document.createElement('button');
+    mixBtn.className = "action-btn";
+    mixBtn.style.marginBottom = "20px";
+    mixBtn.style.background = "linear-gradient(45deg, #ff5500, #ff00ff)"; // Spezial-Optik
+    mixBtn.innerText = "🔀 ALLE MIXEN";
+    mixBtn.onclick = () => selectAllMixed();
+    container.appendChild(mixBtn);
 
-        // 2. Einzelne Playlists
-        Object.keys(allPlaylists).forEach(name => {
-            const btn = document.createElement('button');
-            btn.className = "action-btn";
-            btn.style.marginBottom = "10px";
-            btn.innerText = name;
-            btn.onclick = () => selectPlaylist(name);
-            container.appendChild(btn);
+    // 2. Die einzelnen Playlist-Buttons
+    Object.keys(allPlaylists).forEach(name => {
+        const btn = document.createElement('button');
+        btn.className = "action-btn";
+        btn.style.marginBottom = "10px";
+        btn.innerText = name;
+        btn.onclick = () => selectPlaylist(name);
+        container.appendChild(btn);
+    });
+}
+
+function selectAllMixed() {
+    // Wir erstellen ein neues, flaches Objekt aus allen Playlists
+    let mixedSongs = {};
+    
+    Object.keys(allPlaylists).forEach(playlistName => {
+        const songs = allPlaylists[playlistName];
+        Object.keys(songs).forEach(id => {
+            // Wir speichern den Song unter seiner ID. 
+            // Achtung: Wenn IDs doppelt vorkommen, überschreibt die letzte die vorherige.
+            mixedSongs[id] = songs[id];
         });
-    }
+    });
+
+    currentPlaylistData = mixedSongs; // Wir nutzen direkt die Daten
+    document.getElementById('setup-screen').style.display = "none";
+    document.getElementById('game-screen').style.display = "block";
+    document.getElementById('game-status').innerText = "Modus: 🔀 Gemischt (Alle)";
+}
+
+// Diese Variable brauchen wir global, um flexibel zu sein
+let currentPlaylistData = null;
+
+function selectPlaylist(name) {
+    currentPlaylistData = allPlaylists[name];
+    document.getElementById('setup-screen').style.display = "none";
+    document.getElementById('game-screen').style.display = "block";
+    document.getElementById('game-status').innerText = "Modus: " + name;
+}
 
     function selectPlaylist(name) {
-        currentPlaylistData = allPlaylists[name];
-        const color = allPlaylists[name].color || "#ff5500";
-        applyThemeColor(color);
-        
+        currentPlaylist = name;
         document.getElementById('setup-screen').style.display = "none";
         document.getElementById('game-screen').style.display = "block";
         document.getElementById('game-status').innerText = "Modus: " + name;
     }
 
-    function selectAllMixed() {
-        let mixedSongs = {};
-        Object.keys(allPlaylists).forEach(pName => {
-            const playlist = allPlaylists[pName];
-            Object.keys(playlist).forEach(id => { 
-                if(id !== "color") {
-                    mixedSongs[id] = playlist[id]; 
-                }
-            });
-        });
-        currentPlaylistData = mixedSongs;
-        applyThemeColor("#ff5500");
-        document.getElementById('setup-screen').style.display = "none";
-        document.getElementById('game-screen').style.display = "block";
-        document.getElementById('game-status').innerText = "Modus: 🔀 Gemischt";
-    }
-
-    function applyThemeColor(color) {
-        document.documentElement.style.setProperty('--playlist-glow', color + "4D"); 
-        document.documentElement.style.setProperty('--orange', color);
-    }
-
-    function loadSong(id) {
-        if (!currentPlaylistData) {
-            // Falls noch keine Playlist gewählt wurde (z.B. durch direkten QR-Link)
-            selectAllMixed();
-        }
-
-        const song = currentPlaylistData[id];
+    async function loadSong(id) {
+    if (!currentPlaylistData) return;
+    
+    const song = currentPlaylistData[id]; // Sucht direkt in der gewählten Datenmenge
+    if (song) {
+        document.getElementById('game-status').innerText = "Track #" + id + " geladen...";
+        document.getElementById('player-area').style.display = "block";
         
-        if (song && song.url) {
-            document.getElementById('game-status').innerText = "Track #" + id + " geladen";
-            document.getElementById('player-area').style.display = "block";
+        // Auto-Verstecken (wie gewünscht)
+        const clipper = document.getElementById('clipper');
+        const frame = document.getElementById('sc-frame');
+        const btn = document.getElementById('mode-btn');
+        clipper.className = "clipper-play";
+        frame.className = "frame-pos-play";
+        btn.innerText = "Titel anzeigen";
+        isLocked = true;
 
-            // AUTO-VERSTECKEN AKTIVIEREN
-            const clipper = document.getElementById('clipper');
-            const frame = document.getElementById('sc-frame');
-            const btn = document.getElementById('mode-btn');
-            
-            clipper.className = "clipper-play";
-            frame.style.top = "-7px";
-            frame.style.left = "-5px";
-            btn.innerText = "Titel anzeigen";
-            isLocked = true;
-
-            scWidget.load(song.url, { 
-                visual: false, 
-                auto_play: true, 
-                show_artwork: false, 
-                color: "ff5500" 
-            });
-        } else {
-            alert("Fehler: ID " + id + " wurde in dieser Playlist nicht gefunden!");
-        }
+        scWidget.load(song.url, { 
+            visual: false, 
+            auto_play: true, 
+            show_artwork: false, 
+            color: "ff5500" 
+        });
+    } else {
+        alert("ID '" + id + "' wurde nicht gefunden!");
     }
+}
+
+
+    // --- DEINE BESTEHENDEN FUNKTIONEN (Bleiben gleich) ---
 
     function toggleMode() {
         const clipper = document.getElementById('clipper');
@@ -265,18 +326,17 @@
         const btn = document.getElementById('mode-btn');
         if (!isLocked) {
             clipper.className = "clipper-play";
-            frame.style.top = "-7px";
-            frame.style.left = "-5px";
             btn.innerText = "Titel anzeigen";
             isLocked = true;
         } else {
             clipper.className = "clipper-setup";
-            frame.style.top = "0";
-            frame.style.left = "0";
             btn.innerText = "Titel verstecken";
             isLocked = false;
         }
     }
+
+    function toggleRave() { document.getElementById('body').classList.toggle('rave-active'); }
+    function manualId() { const id = prompt("ID:"); if (id) loadSong(id); }
 
     function toggleScanner() {
         const readerEl = document.getElementById('reader');
@@ -286,22 +346,18 @@
             readerEl.style.display = 'block';
             html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-                try {
-                    const url = new URL(text);
-                    const id = url.searchParams.get("id");
-                    if (id) { 
-                        html5QrCode.stop().then(() => { 
-                            readerEl.style.display = 'none'; 
-                            loadSong(id); 
-                        }); 
-                    }
-                } catch(e) { console.error("QR Code Format falsch"); }
+                const url = new URL(text);
+                const id = url.searchParams.get("id");
+                if (id) { 
+                    html5QrCode.stop().then(() => { 
+                        readerEl.style.display = 'none'; 
+                        loadSong(id); 
+                    }); 
+                }
             }, () => {});
         }
     }
-
-    function toggleRave() { document.getElementById('body').classList.toggle('rave-active'); }
-    function manualId() { const id = prompt("ID:"); if (id) loadSong(id); }
 </script>
 </body>
+
 </html>
