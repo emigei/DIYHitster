@@ -2,96 +2,104 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HITSTER Card Generator - Bright Vinyl Edition</title>
+    <title>HITSTER DIY - ID Filter Generator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        :root {
-            --orange: #ff5500;
-        }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f0f0; padding: 20px; }
-        
+        body { font-family: sans-serif; background: #222; color: white; padding: 20px; }
+
         /* Steuerung oben */
-        .controls { 
-            background: white; padding: 20px; border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 30px;
-            display: flex; gap: 15px; align-items: center; justify-content: center;
-        }
-        input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; width: 80px; }
-        button { 
-            background: var(--orange); color: white; border: none; 
-            padding: 10px 25px; border-radius: 6px; cursor: pointer; font-weight: bold;
-        }
-        button:hover { opacity: 0.9; }
-
-        /* Druck-Layout */
-        #output { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 20px; 
-            justify-items: center;
+        .no-print { 
+            background: #333; padding: 25px; border-radius: 15px; 
+            margin-bottom: 30px; text-align: center; border: 1px solid #444; 
         }
 
-        .card-pair { display: flex; gap: 10px; page-break-inside: avoid; margin-bottom: 20px; }
+        .filter-group { display: inline-block; margin: 10px 20px; }
+        input { 
+            padding: 8px; border-radius: 5px; border: 1px solid #ff5500; 
+            background: #444; color: white; width: 60px; text-align: center;
+        }
+
+        .btn-generate { 
+            background: #ff5500; color: white; border: none; padding: 10px 20px; 
+            border-radius: 8px; font-weight: bold; cursor: pointer; margin-left: 10px;
+        }
+
+        /* Karten-Layout */
+        .card-pair { 
+            display: flex; flex-direction: row; flex-wrap: nowrap; gap: 0; 
+            margin-bottom: 40px; justify-content: center; page-break-inside: avoid;
+        }
 
         .card {
-            width: 320px; height: 320px;
-            border: 1px solid #ddd; border-radius: 20px;
-            position: relative; overflow: hidden; background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            width: 380px; height: 380px; position: relative;
+            background-size: cover; background-position: center;
+            -webkit-print-color-adjust: exact; print-color-adjust: exact;
         }
 
-        /* Vorderseite (QR) */
-        .front { display: flex; align-items: center; justify-content: center; }
-        .qr-wrapper { padding: 15px; background: white; border-radius: 10px; }
+        .front { background-image: url('QR-CODE-SEITE.png'); }
 
-        /* Rückseite (Info) */
-        .back {
+        .back { 
+            background-image: url('TITEL+JAHRESZAHL_SEITE.png'); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            padding: 55px; box-sizing: border-box; text-align: center;
+            position: relative; overflow: hidden;
+        }
+        .back { 
+            /* Kein festes Background-Image hier, das machen wir per JS */
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            padding: 55px; box-sizing: border-box; text-align: center;
+            position: relative; overflow: hidden;
             background-size: cover;
             background-position: center;
-            color: black;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; padding: 20px;
         }
 
-        .info-title { font-size: 22px; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; }
-        .info-artist { font-size: 16px; font-weight: 500; margin-bottom: 15px; }
-        .info-year { font-size: 48px; font-weight: 900; }
+        .qr-wrapper {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 6px; border-radius: 8px; display: flex;
+        }
+
+        /* Text über dem Farb-Layer */
+        .info-title, .info-artist, .info-year, .info-label { position: relative; z-index: 2; }
+
+        .info-title { font-size: 20px; font-weight: bold; width: 100%; max-width: 270px; margin-bottom: 5px; text-transform: uppercase; text-shadow: 0 2px 4px #000; overflow-wrap: break-word; line-height: 1.1; }
+        .info-artist { font-size: 16px; color: #ff5500; width: 100%; max-width: 270px; font-weight: bold; margin-bottom: 15px; text-shadow: 0 2px 4px #000; overflow-wrap: break-word; }
+        .info-year { font-size: 60px; font-weight: 900; color: #fff; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); line-height: 1; }
+        .info-label { font-size: 10px; text-transform: uppercase; color: #bbb; margin-top: 5px; letter-spacing: 1px; }
 
         @media print {
-            .controls { display: none; }
+            .no-print { display: none; }
             body { background: white; padding: 0; }
-            .card { border: 1px solid #eee; box-shadow: none; }
+            .card { border: 0.1mm solid #eee; }
+            #output { display: flex; flex-direction: column; align-items: center; }
         }
     </style>
 </head>
 <body>
 
-<div class="controls">
-    <strong>ID Bereich:</strong>
-    <input type="number" id="id-from" value="1">
-    <span>bis</span>
-    <input type="number" id="id-to" value="100">
-    <button onclick="generateFilteredCards()">Karten generieren</button>
-    <button onclick="window.print()" style="background: #333;">Drucken (PDF)</button>
+<div class="no-print">
+    <h1>Karten Filter-Generator</h1>
+    <div class="filter-group">
+        Von ID: <input type="number" id="id-from" value="1">
+    </div>
+    <div class="filter-group">
+        Bis ID: <input type="number" id="id-to" value="10">
+        Bis ID: <input type="number" id="id-to" value="10000">
+    </div>
+    <button class="btn-generate" onclick="generateFilteredCards()">Anzeigen / Aktualisieren</button>
+    <button class="btn-generate" style="background:#444;" onclick="window.print()">🖨️ Drucken</button>
 </div>
 
 <div id="output"></div>
 
 <script>
-    // DEINE URL (Wichtig für den Scanner in der index.html)
-    const BASE_URL = "https://emigei.github.io/DIYHitster/index.html"; 
+    const YOUR_DOMAIN = window.location.origin + "/index.html"; 
     let allPlaylists = {};
 
     async function init() {
         try {
-            // Lade die songs.json vom gleichen Server
             const res = await fetch('songs.json');
             allPlaylists = await res.json();
-        } catch (e) {
-            console.error("Fehler beim Laden der songs.json", e);
-            alert("Konnte songs.json nicht laden. Prüfe die Konsole!");
-        }
+        } catch (e) { console.error("JSON Fehler", e); }
     }
 
     function generateFilteredCards() {
@@ -102,48 +110,45 @@
 
         for (const playlistName in allPlaylists) {
             const playlist = allPlaylists[playlistName];
+            // Wir holen die Farbe für die Jahreszahl (Standard: Orange, falls nichts definiert ist)
             const yearColor = playlist.color || "#ff5500";
-            const bgImage = playlist.image || "TITEL+JAHRESZAHL_SEITE.png";
 
             for (const id in playlist) {
-                // Überspringe Meta-Felder
-                if (id === "color" || id === "image") continue;
+                if (id === "color") continue;
 
                 const numericId = parseInt(id);
                 if (!isNaN(numericId) && numericId >= from && numericId <= to) {
                     const song = playlist[id];
                     const pair = document.createElement('div');
                     pair.className = 'card-pair';
-                    
+
                     pair.innerHTML = `
                         <div class="card front">
                             <div class="qr-wrapper" id="qr-${id}"></div>
                         </div>
-                        <div class="card back" style="background-image: url('${bgImage}');">
+                        <div class="card back" style="background-image: url('TITEL+JAHRESZAHL_SEITE.png');">
                             <div class="info-title">${song.title}</div>
                             <div class="info-artist">${song.artist}</div>
                             <div class="info-year" style="color: ${yearColor};">${song.year}</div>
+                            <div class="info-label">Original-Erstausgabe</div>
                         </div>
                     `;
                     output.appendChild(pair);
 
-                    // QR Code generieren (Zielt auf index.html mit ID Parameter)
                     new QRCode(document.getElementById(`qr-${id}`), {
-                        text: `${BASE_URL}?id=${id}`,
-                        width: 160,
-                        height: 160,
-                        colorDark : "#000000",
-                        colorLight : "#ffffff",
+                        text: `${YOUR_DOMAIN}?id=${id}`,
+                        width: 110, height: 110,
+                        colorDark : "#000000", colorLight : "#ffffff",
                         correctLevel : QRCode.CorrectLevel.H
                     });
                 }
             }
         }
     }
-
-    // Initialisierung beim Start
     init();
 </script>
-
 </body>
 </html>
+
+</html>
+
