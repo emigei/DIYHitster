@@ -274,41 +274,61 @@
 
     window.onload = async () => {
         scWidget = SC.Widget(document.getElementById('sc-frame'));
+        
         try {
             const res = await fetch('songs.json');
             allPlaylists = await res.json();
             setupPlaylistMenu();
+
+            // 1. Prüfen, ob eine ID in der URL steckt (vom QR-Code)
+            const urlParams = new URLSearchParams(window.location.search);
+            const songId = urlParams.get('id');
+
+            if (songId) {
+                // 2. Versuchen, gespeicherten Mix aus localStorage zu laden
+                const savedMix = localStorage.getItem('hitster_mix');
+                if (savedMix) {
+                    currentPlaylistData = JSON.parse(savedMix);
+                    startGame("Modus: Mix geladen");
+                    loadSong(songId);
+                } else {
+                    // Falls kein Mix gespeichert ist, nehmen wir "Alle Mixen" als Backup
+                    selectAllMixed(); 
+                    loadSong(songId);
+                }
+            }
         } catch (e) { 
             document.getElementById('status').innerText = "Fehler beim Laden!";
         }
     };
 
     function setupPlaylistMenu() {
-    const container = document.getElementById('playlist-buttons');
-    container.innerHTML = "";
+        const container = document.getElementById('playlist-buttons');
+        container.innerHTML = "";
+        Object.keys(allPlaylists).forEach(name => {
+            const playlist = allPlaylists[name];
+            const color = playlist.color || "#ff5500";
+            const item = document.createElement('div');
+            item.className = "playlist-item";
+            item.style.setProperty('--item-color', color);
+            item.style.borderLeft = `5px solid ${color}`;
+            item.innerHTML = `
+                <button class="playlist-name-btn" onclick="selectPlaylist('${name}')">${name}</button>
+                <input type="checkbox" class="playlist-checkbox" value="${name}">
+            `;
+            container.appendChild(item);
+        });
+    }
 
-    Object.keys(allPlaylists).forEach(name => {
-        const playlist = allPlaylists[name];
-        const color = playlist.color || "#ff5500"; // Fallback auf Orange
-        
-        const item = document.createElement('div');
-        item.className = "playlist-item";
-        // Wir setzen die Farbe als CSS-Variable für dieses spezielle Item
-        item.style.setProperty('--item-color', color);
-        item.style.borderLeft = `5px solid ${color}`; // Farblicher Akzent links
-
-        item.innerHTML = `
-            <button class="playlist-name-btn" onclick="selectPlaylist('${name}')">${name}</button>
-            <input type="checkbox" class="playlist-checkbox" value="${name}">
-        `;
-        container.appendChild(item);
-    });
-}
-
+    // Hilfsfunktion zum Speichern des Mixes
+    function saveAndStart(data, title) {
+        currentPlaylistData = data;
+        localStorage.setItem('hitster_mix', JSON.stringify(data));
+        startGame(title);
+    }
 
     function selectPlaylist(name) {
-        currentPlaylistData = allPlaylists[name];
-        startGame("Modus: " + name);
+        saveAndStart(allPlaylists[name], "Modus: " + name);
     }
 
     function startCustomMix() {
@@ -324,8 +344,7 @@
                 if(id !== "image" && id !== "color") mixedSongs[id] = songs[id];
             });
         });
-        currentPlaylistData = mixedSongs;
-        startGame("Modus: Eigener Mix");
+        saveAndStart(mixedSongs, "Modus: Eigener Mix");
     }
 
     function selectAllMixed() {
@@ -336,8 +355,7 @@
                 if(id !== "image" && id !== "color") mixedSongs[id] = songs[id];
             });
         });
-        currentPlaylistData = mixedSongs;
-        startGame("Modus: 🔀 Alles gemischt");
+        saveAndStart(mixedSongs, "Modus: 🔀 Alles gemischt");
     }
 
     function startGame(statusText) {
@@ -347,7 +365,9 @@
     }
 
     async function loadSong(id) {
+        // Falls durch direkten Link aufgerufen und kein Mix da, alles mixen
         if (!currentPlaylistData) selectAllMixed();
+        
         const song = currentPlaylistData[id];
         if (song) {
             document.getElementById('game-status').innerText = "Track #" + id + " geladen...";
@@ -356,6 +376,7 @@
             const clipper = document.getElementById('clipper');
             const frame = document.getElementById('sc-frame');
             const btn = document.getElementById('mode-btn');
+            
             clipper.className = "clipper-play";
             frame.className = "frame-pos-play";
             btn.innerText = "Titel anzeigen";
@@ -363,10 +384,11 @@
 
             scWidget.load(song.url, { visual: false, auto_play: true, show_artwork: false, color: "ff5500" });
         } else {
-            alert("ID '" + id + "' nicht gefunden!");
+            alert("ID '" + id + "' in der aktuellen Playlist nicht gefunden!");
         }
     }
 
+    // RESTLICHE FUNKTIONEN (toggleMode, toggleRave, manualId, toggleScanner) bleiben gleich wie vorher...
     function toggleMode() {
         const clipper = document.getElementById('clipper');
         const frame = document.getElementById('sc-frame');
@@ -395,17 +417,23 @@
             readerEl.style.display = 'block';
             html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-                const url = new URL(text);
-                const id = url.searchParams.get("id");
-                if (id) { 
-                    html5QrCode.stop().then(() => { 
-                        readerEl.style.display = 'none'; 
-                        loadSong(id); 
-                    }); 
+                try {
+                    const url = new URL(text);
+                    const id = url.searchParams.get("id");
+                    if (id) { 
+                        html5QrCode.stop().then(() => { 
+                            readerEl.style.display = 'none'; 
+                            loadSong(id); 
+                        }); 
+                    }
+                } catch(e) {
+                    alert("Kein gültiger Hitster-Link!");
                 }
             }, () => {});
         }
     }
 </script>
+    
 </body>
+
 </html>
