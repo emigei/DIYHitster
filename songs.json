@@ -443,7 +443,7 @@
   },
 
   "Elektronische Reise in die Vergangenheit":{
-    "color": "#800080",
+    "color": "#a300ff",
       "4000": { "url": "https://soundcloud.com/darude/sandstorm-radio-edit-2?in=emily-gei/sets/hitster-elektronische-reise-in//s-zM1adqs4roe", "year": "1999", "title": "Sandstorm", "artist": "Darude" },
       "4001": { "url": "https://soundcloud.com/theholysantabarbara-music/dance-mit-de-gaense?in=emily-gei/sets/hitster-elektronische-reise-in//s-zM1adqs4roe", "year": "2017", "title": "Dance mit de Gänse", "artist": "The Holy Santa Barbara" },
       "4002": { "url": "https://soundcloud.com/laserkraft-3d/nein-mann-radio-cut?in=emily-gei/sets/hitster-elektronische-reise-in//s-zM1adqs4roe", "year": "2010", "title": "Nein Mann - Radio Edit", "artist": "Laserkraft 3D" },
@@ -685,3 +685,4 @@
       "5163": { "url": "https://soundcloud.com/crystal-waters-official/gypsy-woman-shes-homeless?in=emily-gei/sets/hitster-bravo-hits-70s-80s-90s//s-T0WH1iM1AfU", "year": "1991", "title": "Gypsy Woman", "artist": "Crystal Waters" }
   }
 }
+
