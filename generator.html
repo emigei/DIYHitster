@@ -5,7 +5,6 @@
     <title>HITSTER DIY - 10x15 Foto Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        /* Grund-Styling */
         body { font-family: sans-serif; background: #222; color: white; margin: 0; padding: 20px; }
 
         .no-print { 
@@ -24,7 +23,6 @@
             border-radius: 8px; font-weight: bold; cursor: pointer; margin-left: 10px;
         }
 
-        /* Container für die Blätter */
         #output { display: flex; flex-direction: column; align-items: center; }
 
         /* Ein 10x15cm Blatt */
@@ -35,98 +33,100 @@
             display: flex;
             flex-direction: column;
             margin-bottom: 40px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
             page-break-after: always;
+            overflow: hidden;
         }
 
-        /* Karten-Layout (Vorder- und Rückseite lückenlos) */
         .card-pair { 
             display: flex; 
             flex-direction: row; 
-            flex-wrap: nowrap; 
+            width: 10cm;
+            height: 5cm;
             gap: 0; 
             margin: 0;
-            padding: 0;
         }
 
-        /* Einzelne Karte 5x5cm */
         .card {
             width: 5cm; 
             height: 5cm; 
             position: relative;
             background-size: cover; 
             background-position: center;
-            overflow: hidden;
             -webkit-print-color-adjust: exact; 
             print-color-adjust: exact;
         }
 
-        .front { background-image: url('QR-CODE-SEITE.png'); }
+        /* Vorderseite mit Bild unter dem QR Code */
+        .front { 
+            background-image: url('QR-CODE-SEITE.png'); 
+            background-color: #333; /* Fallback */
+        }
 
         .back { 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
             justify-content: center; 
-            padding: 8px; /* Kleiner Puffer für Text */
+            padding: 12px; 
             box-sizing: border-box; 
             text-align: center;
+            position: relative;
+            overflow: hidden;
             background-size: cover;
             background-position: center;
         }
 
         .qr-wrapper {
             position: absolute; top: 49.5%; left: 50%; transform: translate(-50%, -50%);
-            background: white; padding: 4px; border-radius: 6px; display: flex;
+            background: white; padding: 5px; border-radius: 6px; display: flex;
         }
 
-        /* Text-Anpassungen (Breite korrigiert, damit nichts übersteht) */
+        /* Text-Fix: Keine festen Breiten, die überragen könnten */
         .info-title, .info-artist, .info-year, .info-label { position: relative; z-index: 2; }
 
         .info-title { 
-            font-size: 11px; font-weight: bold; 
-            width: 100%; /* Nutzt die volle Kartenbreite minus Padding */
-            margin-bottom: 2px; 
+            font-size: 11px; 
+            font-weight: bold; 
+            width: 80%; 
+            margin-bottom: 3px; 
             text-transform: uppercase; 
             text-shadow: 0 1px 3px #000; 
-            overflow-wrap: break-word; 
+            overflow-wrap: break-word; /* Verhindert das Herausragen */
             line-height: 1.1; 
         }
 
         .info-artist { 
-            font-size: 9px; color: #ff5500; 
-            width: 100%; 
+            font-size: 9px; 
+            color: #ff5500; 
+            width: 80%; 
             font-weight: bold; 
             margin-bottom: 8px; 
             text-shadow: 0 1px 3px #000; 
             overflow-wrap: break-word; 
         }
 
-        .info-year { font-size: 36px; font-weight: 900; color: #fff; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); line-height: 1; }
+        .info-year { font-size: 38px; font-weight: 900; color: #fff; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); line-height: 1; }
         .info-label { font-size: 6px; text-transform: uppercase; color: #bbb; margin-top: 3px; letter-spacing: 0.5px; }
 
         @media print {
             .no-print { display: none; }
             body { background: white; padding: 0; margin: 0; }
             .print-sheet { margin: 0; box-shadow: none; }
-            @page {
-                size: 10cm 15cm;
-                margin: 0;
-            }
+            @page { size: 10cm 15cm; margin: 0; }
         }
     </style>
 </head>
 <body>
 
 <div class="no-print">
-    <h1>HITSTER DIY - 10x15 Generator</h1>
+    <h1>HITSTER DIY - 10x15 Fix</h1>
     <div class="filter-group">
         Von ID: <input type="number" id="id-from" value="1">
     </div>
     <div class="filter-group">
         Bis ID: <input type="number" id="id-to" value="6">
     </div>
-    <button class="btn-generate" onclick="generateFilteredCards()">Anzeigen / Aktualisieren</button>
+    <button class="btn-generate" onclick="generateFilteredCards()">Karten erstellen</button>
     <button class="btn-generate" style="background:#444;" onclick="window.print()">🖨️ Drucken (10x15)</button>
 </div>
 
@@ -150,7 +150,7 @@
         output.innerHTML = ""; 
 
         let currentSheet = null;
-        let cardInSheetCount = 0;
+        let count = 0;
 
         for (const playlistName in allPlaylists) {
             const playlist = allPlaylists[playlistName];
@@ -158,12 +158,10 @@
 
             for (const id in playlist) {
                 if (id === "color") continue;
-
                 const numericId = parseInt(id);
+
                 if (!isNaN(numericId) && numericId >= from && numericId <= to) {
-                    
-                    // Alle 3 Paare ein neues Blatt starten
-                    if (cardInSheetCount % 3 === 0) {
+                    if (count % 3 === 0) {
                         currentSheet = document.createElement('div');
                         currentSheet.className = 'print-sheet';
                         output.appendChild(currentSheet);
@@ -192,8 +190,7 @@
                         colorDark : "#000000", colorLight : "#ffffff",
                         correctLevel : QRCode.CorrectLevel.H
                     });
-
-                    cardInSheetCount++;
+                    count++;
                 }
             }
         }
