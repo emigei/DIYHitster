@@ -27,8 +27,8 @@
 
         /* Ein 10x15cm Blatt */
         .print-sheet {
-            width: 10cm;
-            height: 15cm;
+            width: 21cm;
+            height: 29.7cm;
             background: white;
             display: flex;
             flex-direction: column;
@@ -40,15 +40,15 @@
         .card-pair { 
             display: flex; 
             flex-direction: row; 
-            width: 10cm;
-            height: 5cm;
+            width: 14cm;
+            height: 7cm;
             gap: 0; 
             margin: 0;
         }
 
         .card {
-            width: 5cm; 
-            height: 5cm; 
+            width: 7cm; 
+            height: 7cm; 
             position: relative;
             background-size: cover; 
             background-position: center;
@@ -112,7 +112,7 @@
             .no-print { display: none; }
             body { background: white; padding: 0; margin: 0; }
             .print-sheet { margin: 0; box-shadow: none; }
-            @page { size: 10cm 15cm; margin: 0; }
+            @page { size: 21cm 29.7cm; margin: 0; }
         }
     </style>
 </head>
