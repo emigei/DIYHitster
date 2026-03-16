@@ -27,8 +27,8 @@
 
         /* Ein 10x15cm Blatt */
         .print-sheet {
-            width: 21cm;
-            height: 29.7cm;
+            width: 10cm;
+            height: 15cm;
             background: white;
             display: flex;
             flex-direction: column;
@@ -40,15 +40,15 @@
         .card-pair { 
             display: flex; 
             flex-direction: row; 
-            width: 14cm;
-            height: 7cm;
+            width: 10cm;
+            height: 5cm;
             gap: 0; 
             margin: 0;
         }
 
         .card {
-            width: 7cm; 
-            height: 7cm; 
+            width: 5cm; 
+            height: 5cm; 
             position: relative;
             background-size: cover; 
             background-position: center;
@@ -112,7 +112,7 @@
             .no-print { display: none; }
             body { background: white; padding: 0; margin: 0; }
             .print-sheet { margin: 0; box-shadow: none; }
-            @page { size: 21cm 29.7cm; margin: 0; }
+            @page { size: 10cm 15cm; margin: 0; }
         }
     </style>
 </head>
@@ -161,7 +161,7 @@
                 const numericId = parseInt(id);
 
                 if (!isNaN(numericId) && numericId >= from && numericId <= to) {
-                    if (count % 4 === 0) {
+                    if (count % 3 === 0) {
                         currentSheet = document.createElement('div');
                         currentSheet.className = 'print-sheet';
                         output.appendChild(currentSheet);
