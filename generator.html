@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>HITSTER DIY - 10x15 Foto Edition</title>
+    <title>HITSTER DIY - 7x7cm Karten (20x30 Print)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #222; color: white; margin: 0; padding: 20px; }
@@ -25,30 +25,37 @@
 
         #output { display: flex; flex-direction: column; align-items: center; }
 
-        /* Ein 10x15cm Blatt */
+        /* Das Blatt: 20x30cm Fotopapier */
         .print-sheet {
-            width: 10cm;
-            height: 15cm;
+            width: 20cm;
+            height: 30cm;
             background: white;
             display: flex;
-            flex-direction: column;
+            flex-wrap: wrap; /* Erlaubt die 2 Spalten */
+            align-content: flex-start;
+            justify-content: flex-start;
+            padding: 0;
             margin-bottom: 40px;
             page-break-after: always;
             overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
+        /* Ein Paar: 14cm breit (7+7), 7cm hoch */
         .card-pair { 
             display: flex; 
             flex-direction: row; 
-            width: 10cm;
-            height: 5cm;
+            width: 14cm;
+            height: 7cm;
             gap: 0; 
             margin: 0;
+            /* Ganz zarte Hilfslinie zum Schneiden */
+            outline: 0.1mm solid rgba(0,0,0,0.05); 
         }
 
         .card {
-            width: 5cm; 
-            height: 5cm; 
+            width: 7cm; 
+            height: 7cm; 
             position: relative;
             background-size: cover; 
             background-position: center;
@@ -56,10 +63,9 @@
             print-color-adjust: exact;
         }
 
-        /* Vorderseite mit Bild unter dem QR Code */
         .front { 
             background-image: url('QR-CODE-SEITE.png'); 
-            background-color: #333; /* Fallback */
+            background-color: #333;
         }
 
         .back { 
@@ -67,7 +73,7 @@
             flex-direction: column; 
             align-items: center; 
             justify-content: center; 
-            padding: 12px; 
+            padding: 18px; 
             box-sizing: border-box; 
             text-align: center;
             position: relative;
@@ -77,57 +83,57 @@
         }
 
         .qr-wrapper {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: white; padding: 5px; border-radius: 6px; display: flex;
+            position: absolute; top: 49.5%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 7px; border-radius: 8px; display: flex;
         }
 
-        /* Text-Fix: Keine festen Breiten, die überragen könnten */
+        /* Text-Styling für 7cm Karte */
         .info-title, .info-artist, .info-year, .info-label { position: relative; z-index: 2; }
 
         .info-title { 
-            font-size: 12px; 
+            font-size: 16px; 
             font-weight: bold; 
-            width: 92%; 
-            margin-bottom: 3px; 
+            width: 100%; 
+            margin-bottom: 4px; 
             text-transform: uppercase; 
-            text-shadow: 0 1px 3px #000; 
-            overflow-wrap: break-word; /* Verhindert das Herausragen */
+            text-shadow: 0 1px 4px #000; 
+            overflow-wrap: break-word; 
             line-height: 1.1; 
         }
 
         .info-artist { 
-            font-size: 11px; 
+            font-size: 13px; 
             color: #ff5500; 
-            width: 80%; 
+            width: 90%; 
             font-weight: bold; 
-            margin-bottom: 8px; 
-            text-shadow: 0 1px 3px #000; 
+            margin-bottom: 12px; 
+            text-shadow: 0 1px 4px #000; 
             overflow-wrap: break-word; 
         }
 
-        .info-year { font-size: 38px; font-weight: 900; color: #fff; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); line-height: 1; }
-        .info-label { font-size: 6px; text-transform: uppercase; color: #bbb; margin-top: 3px; letter-spacing: 0.5px; }
+        .info-year { font-size: 52px; font-weight: 900; color: #fff; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); line-height: 1; }
+        .info-label { font-size: 8px; text-transform: uppercase; color: #bbb; margin-top: 4px; letter-spacing: 0.8px; }
 
         @media print {
             .no-print { display: none; }
             body { background: white; padding: 0; margin: 0; }
-            .print-sheet { margin: 0; box-shadow: none; }
-            @page { size: 10cm 15cm; margin: 0; }
+            .print-sheet { margin: 0; box-shadow: none; border: none; }
+            @page { size: 20cm 30cm; margin: 0; }
         }
     </style>
 </head>
 <body>
 
 <div class="no-print">
-    <h1>HITSTER DIY - 10x15 Fix</h1>
+    <h1>HITSTER DIY - 7x7cm (20x30 Print)</h1>
     <div class="filter-group">
         Von ID: <input type="number" id="id-from" value="1">
     </div>
     <div class="filter-group">
-        Bis ID: <input type="number" id="id-to" value="6">
+        Bis ID: <input type="number" id="id-to" value="8">
     </div>
     <button class="btn-generate" onclick="generateFilteredCards()">Karten erstellen</button>
-    <button class="btn-generate" style="background:#444;" onclick="window.print()">🖨️ Drucken (10x15)</button>
+    <button class="btn-generate" style="background:#444;" onclick="window.print()">🖨️ Drucken (20x30)</button>
 </div>
 
 <div id="output"></div>
@@ -161,7 +167,8 @@
                 const numericId = parseInt(id);
 
                 if (!isNaN(numericId) && numericId >= from && numericId <= to) {
-                    if (count % 3 === 0) {
+                    // Neues Blatt alle 8 Paare (2 Spalten x 4 Zeilen)
+                    if (count % 8 === 0) {
                         currentSheet = document.createElement('div');
                         currentSheet.className = 'print-sheet';
                         output.appendChild(currentSheet);
@@ -186,7 +193,7 @@
 
                     new QRCode(document.getElementById(`qr-${id}`), {
                         text: `${YOUR_DOMAIN}?id=${id}`,
-                        width: 110, height: 110,
+                        width: 170, height: 170,
                         colorDark : "#000000", colorLight : "#ffffff",
                         correctLevel : QRCode.CorrectLevel.H
                     });
@@ -199,5 +206,3 @@
 </script>
 </body>
 </html>
-
-
