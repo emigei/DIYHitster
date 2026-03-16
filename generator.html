@@ -2,27 +2,11 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>HITSTER DIY - 7x7cm Karten (20x30 Print)</title>
+    <title>HITSTER DIY - 6.5cm Karten (10 Paare auf 20x30)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #222; color: white; margin: 0; padding: 20px; }
-
-        .no-print { 
-            background: #333; padding: 25px; border-radius: 15px; 
-            margin-bottom: 30px; text-align: center; border: 1px solid #444; 
-        }
-
-        .filter-group { display: inline-block; margin: 10px 20px; }
-        input { 
-            padding: 8px; border-radius: 5px; border: 1px solid #ff5500; 
-            background: #444; color: white; width: 60px; text-align: center;
-        }
-
-        .btn-generate { 
-            background: #ff5500; color: white; border: none; padding: 10px 20px; 
-            border-radius: 8px; font-weight: bold; cursor: pointer; margin-left: 10px;
-        }
-
+        .no-print { background: #333; padding: 25px; border-radius: 15px; margin-bottom: 30px; text-align: center; border: 1px solid #444; }
         #output { display: flex; flex-direction: column; align-items: center; }
 
         /* Das Blatt: 20x30cm Fotopapier */
@@ -30,89 +14,71 @@
             width: 20cm;
             height: 30cm;
             background: white;
-            display: flex;
-            flex-wrap: wrap; /* Erlaubt die 2 Spalten */
-            align-content: flex-start;
-            justify-content: flex-start;
-            padding: 0;
+            position: relative;
             margin-bottom: 40px;
             page-break-after: always;
             overflow: hidden;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
-        /* Ein Paar: 14cm breit (7+7), 7cm hoch */
+        /* Container für die 8 normalen Paare (links) */
+        .main-grid {
+            position: absolute;
+            top: 0; left: 0;
+            width: 13cm; /* 2 Spalten à 6.5cm Kartenbreite pro Paar */
+            height: 26cm; /* 4 Zeilen à 6.5cm */
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        /* Container für die 2 gedrehten Paare (rechts im 7cm Reststreifen) */
+        .side-grid {
+            position: absolute;
+            top: 0; left: 13cm;
+            width: 7cm;
+            height: 30cm;
+        }
+
         .card-pair { 
             display: flex; 
-            flex-direction: row; 
-            width: 14cm;
-            height: 7cm;
-            gap: 0; 
-            margin: 0;
-            /* Ganz zarte Hilfslinie zum Schneiden */
-            outline: 0.1mm solid rgba(0,0,0,0.05); 
+            width: 13cm; 
+            height: 6.5cm; 
+            outline: 0.1mm solid rgba(0,0,0,0.1); /* Schnittlinie */
+        }
+
+        /* Die gedrehten Paare im Seitenstreifen */
+        .card-pair.rotated {
+            position: absolute;
+            transform: rotate(90deg);
+            transform-origin: top left;
+            left: 6.5cm; /* Verschiebung damit es im Streifen landet */
         }
 
         .card {
-            width: 7cm; 
-            height: 7cm; 
+            width: 6.5cm; 
+            height: 6.5cm; 
             position: relative;
             background-size: cover; 
             background-position: center;
             -webkit-print-color-adjust: exact; 
-            print-color-adjust: exact;
         }
 
-        .front { 
-            background-image: url('QR-CODE-SEITE.png'); 
-            background-color: #333;
-        }
-
+        .front { background-image: url('QR-CODE-SEITE.png'); }
         .back { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            padding: 18px; 
-            box-sizing: border-box; 
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            background-size: cover;
-            background-position: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            padding: 15px; box-sizing: border-box; text-align: center; background-size: cover;
         }
 
         .qr-wrapper {
             position: absolute; top: 49.5%; left: 50%; transform: translate(-50%, -50%);
-            background: white; padding: 7px; border-radius: 8px; display: flex;
+            background: white; padding: 6px; border-radius: 8px; display: flex;
         }
 
-        /* Text-Styling für 7cm Karte */
-        .info-title, .info-artist, .info-year, .info-label { position: relative; z-index: 2; }
-
-        .info-title { 
-            font-size: 16px; 
-            font-weight: bold; 
-            width: 100%; 
-            margin-bottom: 4px; 
-            text-transform: uppercase; 
-            text-shadow: 0 1px 4px #000; 
-            overflow-wrap: break-word; 
-            line-height: 1.1; 
-        }
-
-        .info-artist { 
-            font-size: 13px; 
-            color: #ff5500; 
-            width: 90%; 
-            font-weight: bold; 
-            margin-bottom: 12px; 
-            text-shadow: 0 1px 4px #000; 
-            overflow-wrap: break-word; 
-        }
-
-        .info-year { font-size: 52px; font-weight: 900; color: #fff; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); line-height: 1; }
-        .info-label { font-size: 8px; text-transform: uppercase; color: #bbb; margin-top: 4px; letter-spacing: 0.8px; }
+        /* Textanpassung für 6.5cm */
+        .info-title { font-size: 15px; font-weight: bold; width: 100%; margin-bottom: 4px; text-transform: uppercase; text-shadow: 0 2px 4px #000; overflow-wrap: break-word; line-height: 1.1; z-index: 2; }
+        .info-artist { font-size: 12px; color: #ff5500; width: 100%; font-weight: bold; margin-bottom: 10px; text-shadow: 0 2px 4px #000; overflow-wrap: break-word; z-index: 2; }
+        .info-year { font-size: 48px; font-weight: 900; color: #fff; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); line-height: 1; z-index: 2; }
+        .info-label { font-size: 8px; text-transform: uppercase; color: #bbb; margin-top: 4px; z-index: 2; }
 
         @media print {
             .no-print { display: none; }
@@ -125,15 +91,12 @@
 <body>
 
 <div class="no-print">
-    <h1>HITSTER DIY - 7x7cm (20x30 Print)</h1>
-    <div class="filter-group">
-        Von ID: <input type="number" id="id-from" value="1">
-    </div>
-    <div class="filter-group">
-        Bis ID: <input type="number" id="id-to" value="8">
-    </div>
-    <button class="btn-generate" onclick="generateFilteredCards()">Karten erstellen</button>
-    <button class="btn-generate" style="background:#444;" onclick="window.print()">🖨️ Drucken (20x30)</button>
+    <h1>6,5cm Karten (10 Paare pro 20x30 Blatt)</h1>
+    <p>8 Paare links + 2 Paare gedreht rechts</p>
+    Von ID: <input type="number" id="id-from" value="1">
+    Bis ID: <input type="number" id="id-to" value="10">
+    <button class="btn-generate" onclick="generateFilteredCards()" style="background:#ff5500; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer;">Karten generieren</button>
+    <button onclick="window.print()" style="background:#444; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer;">🖨️ Drucken</button>
 </div>
 
 <div id="output"></div>
@@ -146,7 +109,21 @@
         try {
             const res = await fetch('songs.json');
             allPlaylists = await res.json();
-        } catch (e) { console.error("JSON Fehler", e); }
+        } catch (e) { console.error("Fehler", e); }
+    }
+
+    function createPairHTML(id, song, yearColor) {
+        return `
+            <div class="card front">
+                <div class="qr-wrapper" id="qr-${id}"></div>
+            </div>
+            <div class="card back" style="background-image: url('TITEL+JAHRESZAHL_SEITE.png');">
+                <div class="info-title">${song.title}</div>
+                <div class="info-artist">${song.artist}</div>
+                <div class="info-year" style="color: ${yearColor};">${song.year}</div>
+                <div class="info-label">DIY EDITION</div>
+            </div>
+        `;
     }
 
     function generateFilteredCards() {
@@ -155,50 +132,54 @@
         const output = document.getElementById('output');
         output.innerHTML = ""; 
 
-        let currentSheet = null;
-        let count = 0;
-
+        let songsToPrint = [];
         for (const playlistName in allPlaylists) {
             const playlist = allPlaylists[playlistName];
             const yearColor = playlist.color || "#ff5500";
-
             for (const id in playlist) {
                 if (id === "color") continue;
-                const numericId = parseInt(id);
-
-                if (!isNaN(numericId) && numericId >= from && numericId <= to) {
-                    // Neues Blatt alle 8 Paare (2 Spalten x 4 Zeilen)
-                    if (count % 8 === 0) {
-                        currentSheet = document.createElement('div');
-                        currentSheet.className = 'print-sheet';
-                        output.appendChild(currentSheet);
-                    }
-
-                    const song = playlist[id];
-                    const pair = document.createElement('div');
-                    pair.className = 'card-pair';
-
-                    pair.innerHTML = `
-                        <div class="card front">
-                            <div class="qr-wrapper" id="qr-${id}"></div>
-                        </div>
-                        <div class="card back" style="background-image: url('TITEL+JAHRESZAHL_SEITE.png');">
-                            <div class="info-title">${song.title}</div>
-                            <div class="info-artist">${song.artist}</div>
-                            <div class="info-year" style="color: ${yearColor};">${song.year}</div>
-                            <div class="info-label">DIY EDITION</div>
-                        </div>
-                    `;
-                    currentSheet.appendChild(pair);
-
-                    new QRCode(document.getElementById(`qr-${id}`), {
-                        text: `${YOUR_DOMAIN}?id=${id}`,
-                        width: 170, height: 170,
-                        colorDark : "#000000", colorLight : "#ffffff",
-                        correctLevel : QRCode.CorrectLevel.H
-                    });
-                    count++;
+                if (parseInt(id) >= from && parseInt(id) <= to) {
+                    songsToPrint.push({id, song: playlist[id], yearColor});
                 }
+            }
+        }
+
+        for (let i = 0; i < songsToPrint.length; i += 10) {
+            const sheet = document.createElement('div');
+            sheet.className = 'print-sheet';
+            
+            const mainGrid = document.createElement('div');
+            mainGrid.className = 'main-grid';
+            
+            const sideGrid = document.createElement('div');
+            sideGrid.className = 'side-grid';
+
+            sheet.appendChild(mainGrid);
+            sheet.appendChild(sideGrid);
+            output.appendChild(sheet);
+
+            for (let j = 0; j < 10 && (i + j) < songsToPrint.length; j++) {
+                const item = songsToPrint[i + j];
+                const pair = document.createElement('div');
+                
+                if (j < 8) {
+                    pair.className = 'card-pair';
+                    mainGrid.appendChild(pair);
+                } else {
+                    pair.className = 'card-pair rotated';
+                    // Die 2 gedrehten Paare untereinander (ein Paar ist 13cm lang nach Drehung)
+                    pair.style.top = (j === 8 ? "0cm" : "13.5cm"); 
+                    sideGrid.appendChild(pair);
+                }
+
+                pair.innerHTML = createPairHTML(item.id, item.song, item.yearColor);
+                
+                new QRCode(document.getElementById(`qr-${item.id}`), {
+                    text: `${YOUR_DOMAIN}?id=${item.id}`,
+                    width: 160, height: 160,
+                    colorDark : "#000000", colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
             }
         }
     }
