@@ -161,7 +161,7 @@
                 const numericId = parseInt(id);
 
                 if (!isNaN(numericId) && numericId >= from && numericId <= to) {
-                    if (count % 3 === 0) {
+                    if (count % 4 === 0) {
                         currentSheet = document.createElement('div');
                         currentSheet.className = 'print-sheet';
                         output.appendChild(currentSheet);
