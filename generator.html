@@ -6,12 +6,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #222; color: white; margin: 0; padding: 0; }
-        .no-print { background: #333; padding: 20px; text-align: center; border-bottom: 1px solid #444; }
-        #output { display: flex; flex-direction: column; align-items: center; padding-top: 20px; }
+        .no-print { background: #333; padding: px; text-align: center; border-bottom: 1px solid #444; }
+        #output { display: flex; flex-direction: column; align-items: center; padding-top: px; }
 
         .print-sheet {
-            width: 20cm;
-            height: 30cm;
+            width: 21cm;
+            height: 29.7cm;
             background: white;
             position: relative;
             page-break-after: always;
@@ -75,15 +75,15 @@
         }
 
         /* Textelemente */
-        .info-title { font-size: 13px; font-weight: bold; width: 90%; margin-bottom: 3px; text-transform: uppercase; color: white; text-shadow: 0 1px 3px #000; line-height: 1.1; z-index: 2; }
-        .info-artist { font-size: 11px; color: #ff5500; font-weight: bold; margin-bottom: 8px; text-shadow: 0 1px 3px #000; z-index: 2; }
-        .info-year { font-size: 45px; font-weight: 900; color: #fff; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); z-index: 2; }
+        .info-title { font-size: px; font-weight: bold; width: 90%; margin-bottom: 3px; text-transform: uppercase; color: white; text-shadow: 0 1px 3px #000; line-height: 1.1; z-index: 2; }
+        .info-artist { font-size: 18px; color: #ff5500; font-weight: bold; margin-bottom: 8px; text-shadow: 0 1px 3px #000; z-index: 2; }
+        .info-year { font-size: 60px; font-weight: 900; color: #fff; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); z-index: 2; }
 
         @media print {
             .no-print { display: none; }
             body { background: white; }
             .print-sheet { margin: 0; border: none; }
-            @page { size: 20cm 30cm; margin: 0; }
+            @page { size: 21cm 29.7cm; margin: 0; }
         }
     </style>
 </head>
