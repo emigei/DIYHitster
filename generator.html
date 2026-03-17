@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>HITSTER DIY - 6.5cm 1</title>
+    <title>HITSTER DIY - 6.5cm 2</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #222; color: white; margin: 0; padding: 0; }
@@ -19,35 +19,40 @@
             margin-bottom: 40px;
         }
 
-        /* Hauptspalte links: Strikte Ausrichtung untereinander */
+        /* Hauptspalte links: 4 Paare untereinander */
         .main-grid {
             position: absolute;
-            top: 1cm; left: 0.5cm;
+            top: 0.5cm; 
+            left: 0.2cm;
             width: 13cm; 
-            display: block; /* Block sorgt dafür, dass Paare untereinander bleiben */
+            display: block;
         }
 
-        /* Seitenstreifen rechts */
+        /* Seitenstreifen rechts: Wir rücken ihn auf 13.2cm ein */
         .side-grid {
             position: absolute;
-            top: 1cm; left: 14cm;
+            top: 0.5cm; 
+            left: 13.2cm; 
             width: 6.5cm;
+            height: 28cm;
         }
 
         .card-pair { 
             display: flex; 
             width: 13cm; 
             height: 6.5cm; 
-            margin-bottom: 0; /* Kein Gap, damit sie bündig liegen */
-            outline: 0.1mm solid #eee;
+            outline: 0.1mm solid rgba(0,0,0,0.1);
         }
 
+        /* Die gedrehten Paare im Side-Grid */
         .card-pair.rotated {
             position: absolute;
             transform: rotate(90deg);
             transform-origin: top left;
+            /* Nach Drehung ist die 'Breite' 13cm die neue 'Höhe' */
             left: 6.5cm; 
             width: 13cm;
+            height: 6.5cm;
         }
 
         .card {
@@ -66,7 +71,7 @@
 
         .qr-wrapper {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: white; padding: 5px; border-radius: 8px; display: flex;
+            background: white; padding: 6px; border-radius: 8px; display: flex;
         }
 
         /* Textelemente */
@@ -77,7 +82,7 @@
         @media print {
             .no-print { display: none; }
             body { background: white; }
-            .print-sheet { margin: 0; }
+            .print-sheet { margin: 0; border: none; }
             @page { size: 20cm 30cm; margin: 0; }
         }
     </style>
@@ -85,7 +90,7 @@
 <body>
 
 <div class="no-print">
-    <h1>6,5cm Finaler Fix</h1>
+    <h1>6,5cm - Side-Grid Fixed</h1>
     ID von: <input type="number" id="id-from" value="1"> 
     bis: <input type="number" id="id-to" value="6">
     <button onclick="generateFilteredCards()" style="background:#ff5500; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer;">Generieren</button>
@@ -146,6 +151,7 @@
                     mainGrid.appendChild(pair);
                 } else {
                     pair.className = 'card-pair rotated';
+                    // j=4 -> 0cm, j=5 -> 13.5cm
                     pair.style.top = (j === 4 ? "0cm" : "13.5cm"); 
                     sideGrid.appendChild(pair);
                 }
@@ -161,7 +167,7 @@
                 
                 new QRCode(document.getElementById(`qr-${item.id}`), {
                     text: `${YOUR_DOMAIN}?id=${item.id}`,
-                    width: 140, height: 140
+                    width: 125, height: 125
                 });
             }
         }
