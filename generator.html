@@ -2,12 +2,11 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>HITSTER DIY - 6.5cm Final Fix</title>
+    <title>HITSTER DIY - 6.5cm 1</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #222; color: white; margin: 0; padding: 0; }
         .no-print { background: #333; padding: 20px; text-align: center; border-bottom: 1px solid #444; }
-        
         #output { display: flex; flex-direction: column; align-items: center; padding-top: 20px; }
 
         .print-sheet {
@@ -20,16 +19,15 @@
             margin-bottom: 40px;
         }
 
-        /* Hauptbereich: Nur 2 Spalten breit (13cm), damit die 3. Spalte frei bleibt */
+        /* Hauptspalte links: Strikte Ausrichtung untereinander */
         .main-grid {
             position: absolute;
             top: 1cm; left: 0.5cm;
             width: 13cm; 
-            display: flex;
-            flex-wrap: wrap;
+            display: block; /* Block sorgt dafür, dass Paare untereinander bleiben */
         }
 
-        /* Seitenstreifen für die gedrehten Karten */
+        /* Seitenstreifen rechts */
         .side-grid {
             position: absolute;
             top: 1cm; left: 14cm;
@@ -40,6 +38,7 @@
             display: flex; 
             width: 13cm; 
             height: 6.5cm; 
+            margin-bottom: 0; /* Kein Gap, damit sie bündig liegen */
             outline: 0.1mm solid #eee;
         }
 
@@ -47,7 +46,7 @@
             position: absolute;
             transform: rotate(90deg);
             transform-origin: top left;
-            left: 6.5cm; /* Versatz für 90 Grad */
+            left: 6.5cm; 
             width: 13cm;
         }
 
@@ -58,10 +57,11 @@
             -webkit-print-color-adjust: exact;
         }
 
-        .front { background-image: url('QR-CODE-SEITE.png'); background-color: #f0f0f0; }
+        .front { background-image: url('QR-CODE-SEITE.png'); }
         .back { 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
             padding: 10px; box-sizing: border-box; text-align: center; background-size: cover;
+            position: relative;
         }
 
         .qr-wrapper {
@@ -69,6 +69,7 @@
             background: white; padding: 5px; border-radius: 8px; display: flex;
         }
 
+        /* Textelemente */
         .info-title { font-size: 13px; font-weight: bold; width: 90%; margin-bottom: 3px; text-transform: uppercase; color: white; text-shadow: 0 1px 3px #000; line-height: 1.1; z-index: 2; }
         .info-artist { font-size: 11px; color: #ff5500; font-weight: bold; margin-bottom: 8px; text-shadow: 0 1px 3px #000; z-index: 2; }
         .info-year { font-size: 45px; font-weight: 900; color: #fff; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); z-index: 2; }
@@ -84,10 +85,10 @@
 <body>
 
 <div class="no-print">
-    <h1>Hitster Fix: 6 Paare pro Blatt</h1>
+    <h1>6,5cm Finaler Fix</h1>
     ID von: <input type="number" id="id-from" value="1"> 
     bis: <input type="number" id="id-to" value="6">
-    <button onclick="generateFilteredCards()" style="background:#ff5500; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer;">Karten generieren</button>
+    <button onclick="generateFilteredCards()" style="background:#ff5500; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer;">Generieren</button>
     <button onclick="window.print()" style="background:#444; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer;">Drucken</button>
 </div>
 
@@ -122,7 +123,6 @@
             }
         }
 
-        // WICHTIG: i += 6, da wir 6 Paare pro Blatt drucken
         for (let i = 0; i < songs.length; i += 6) {
             const sheet = document.createElement('div');
             sheet.className = 'print-sheet';
@@ -137,17 +137,14 @@
             sheet.appendChild(sideGrid);
             output.appendChild(sheet);
 
-            // Maximal 6 Songs pro Blatt
             for (let j = 0; j < 6 && (i + j) < songs.length; j++) {
                 const item = songs[i + j];
                 const pair = document.createElement('div');
                 
                 if (j < 4) {
-                    // Die ersten 4 Paare kommen untereinander in die linke Spalte
                     pair.className = 'card-pair';
                     mainGrid.appendChild(pair);
                 } else {
-                    // Paar 5 und 6 kommen gedreht in den rechten Streifen
                     pair.className = 'card-pair rotated';
                     pair.style.top = (j === 4 ? "0cm" : "13.5cm"); 
                     sideGrid.appendChild(pair);
