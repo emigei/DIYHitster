@@ -189,6 +189,19 @@
     top: 0px;
 }
 
+.hint-box {
+    display: none;
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(255, 85, 0, 0.12);
+    border: 1px solid rgba(255, 85, 0, 0.35);
+    color: #ffd7c2;
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: left;
+}
+
 
         /* --- RAVE AKTIV --- */
         .rave-active { animation: strobo 0.1s infinite !important; }
@@ -255,6 +268,7 @@
                     src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1&show_artwork=false"></iframe>
             </div>
             <button id="mode-btn" class="action-btn" onclick="toggleMode()">Titel verstecken</button>
+            <div id="auth-hint" class="hint-box"></div>
         </div>
 
         <div id="reader" style="width:100%; border-radius:20px; overflow:hidden; margin-top:15px; display:none; border: 1px solid #333;"></div>
@@ -271,9 +285,14 @@
     let scWidget;
     let allPlaylists = {};
     let currentPlaylistData = null;
+    let currentSongUrl = null;
+    let pendingPlayerRefresh = false;
+    let lastAuthRefreshAt = 0;
+    const AUTH_REFRESH_DEBOUNCE_MS = 1500;
 
     window.onload = async () => {
         scWidget = SC.Widget(document.getElementById('sc-frame'));
+        registerAuthRefreshHandlers();
         
         try {
             const res = await fetch('songs.json');
@@ -370,6 +389,8 @@
         
         const song = currentPlaylistData[id];
         if (song) {
+            currentSongUrl = song.url;
+            hideAuthHint();
             document.getElementById('game-status').innerText = "Track #" + id + " geladen...";
             document.getElementById('player-area').style.display = "block";
             
@@ -382,13 +403,87 @@
             btn.innerText = "Titel anzeigen";
             isLocked = true;
 
-            scWidget.load(song.url, { visual: false, auto_play: true, show_artwork: false, color: "ff5500" });
+            loadCurrentSongIntoWidget(true);
         } else {
             alert("ID '" + id + "' in der aktuellen Playlist nicht gefunden!");
         }
     }
 
     // RESTLICHE FUNKTIONEN (toggleMode, toggleRave, manualId, toggleScanner) bleiben gleich wie vorher...
+function loadCurrentSongIntoWidget(forceRefresh = false) {
+    if (!currentSongUrl || !scWidget) return;
+
+    scWidget.load(currentSongUrl, {
+        visual: false,
+        auto_play: true,
+        show_artwork: false,
+        color: "ff5500"
+    });
+
+    if (forceRefresh) {
+        const frame = document.getElementById("sc-frame");
+        frame.src = buildSoundCloudEmbedUrl(currentSongUrl, Date.now());
+        scWidget = SC.Widget(frame);
+    }
+}
+
+function buildSoundCloudEmbedUrl(songUrl, cacheBuster) {
+    const params = new URLSearchParams({
+        url: songUrl,
+        show_artwork: "false",
+        auto_play: "true",
+        color: "ff5500"
+    });
+
+    params.set("t", String(cacheBuster));
+    return `https://w.soundcloud.com/player/?${params.toString()}`;
+}
+
+function registerAuthRefreshHandlers() {
+    window.addEventListener("focus", maybeRefreshPlayerAuth);
+    window.addEventListener("pageshow", maybeRefreshPlayerAuth);
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) maybeRefreshPlayerAuth();
+    });
+}
+
+function maybeRefreshPlayerAuth() {
+    if (!currentSongUrl) return;
+
+    const now = Date.now();
+    if (now - lastAuthRefreshAt < AUTH_REFRESH_DEBOUNCE_MS) return;
+    lastAuthRefreshAt = now;
+
+    if (isLocked) {
+        pendingPlayerRefresh = true;
+        return;
+    }
+
+    refreshPlayerAuth();
+}
+
+function refreshPlayerAuth() {
+    loadCurrentSongIntoWidget(true);
+    showAuthHint();
+    pendingPlayerRefresh = false;
+}
+
+function showAuthHint() {
+    const hint = document.getElementById("auth-hint");
+    if (!hint) return;
+
+    hint.style.display = "block";
+    hint.innerText = "SoundCloud wurde nach dem Tab-Wechsel neu geladen. So wird ein neuer Login oder Pro-Status aus einem anderen Tab übernommen.";
+}
+
+function hideAuthHint() {
+    const hint = document.getElementById("auth-hint");
+    if (!hint) return;
+
+    hint.style.display = "none";
+    hint.innerText = "";
+}
+
 function toggleMode() {
     const clipper = document.getElementById('clipper');
     const frame = document.getElementById('sc-frame');
@@ -405,6 +500,7 @@ function toggleMode() {
         viewport.setAttribute("content", "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no");
         
         isLocked = true;
+        hideAuthHint();
     } else { // Switch zum Anzeigen / Login
         clipper.className = "clipper-setup";
         frame.className = "frame-pos-setup";
@@ -415,6 +511,9 @@ function toggleMode() {
         viewport.setAttribute("content", "width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes");
         
         isLocked = false;
+        if (pendingPlayerRefresh) {
+            refreshPlayerAuth();
+        }
     }
 }
     function toggleRave() { document.getElementById('body').classList.toggle('rave-active'); }
