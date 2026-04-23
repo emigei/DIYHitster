@@ -198,46 +198,24 @@
         .rave-active .action-btn { animation: raveColorsA 1.5s infinite; border: none; }
 
         /* --- PLAYER STUFF --- */
-       .clipper-setup { 
-    width: 310px !important; 
-    height: 220px !important; 
-    border-radius: 16px; 
-    overflow: hidden !important; 
-}
+        #clipper {
+            margin: 20px auto; overflow: hidden; border: 4px solid var(--orange); 
+            background: #000; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+        .clipper-setup { width: 310px; height: 220px; border-radius: 16px; }
+        .clipper-play { width: 50px; height: 50px; border-radius: 50%; }
 
-/* Das Login-Fenster (Anzeigen-Modus) - Groß & Scrollbar */
-.clipper-play { 
-    width: 95vw !important; 
-    height: 80vh !important; 
-    border-radius: 8px; 
-    overflow: auto !important; 
-    -webkit-overflow-scrolling: touch;
-}
+        #sc-frame { position: absolute; width: 600px; height: 220px; border: none; }
+        .frame-pos-setup { top: 0; left: 0; }
+        .frame-pos-play { top: -7px; left: -5px; } 
 
-/* Frame-Position im Guckloch (Versteckt) */
-.frame-pos-setup { 
-    position: absolute;
-    width: 600px !important; 
-    height: 220px !important; 
-    top: 0; 
-    left: 0; 
-}
-
-/* Frame-Position im Login (Anzeigen) */
-.frame-pos-play { 
-    position: relative;
-    width: 1000px !important; 
-    height: 1000px !important; 
-    top: 0; 
-    left: 0; 
-}
         /* --- BUTTONS --- */
         .action-btn { 
             background: var(--orange); color: white; border: none; width: 100%; padding: 16px; 
             border-radius: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; 
             text-transform: uppercase; transition: 0.2s;
         }
-
         .party-btn {
             background: #333; color: #999; font-size: 10px; padding: 10px; border: none;
             border-radius: 12px; margin-top: 20px; cursor: pointer; width: 100%;
@@ -411,30 +389,32 @@
     }
 
     // RESTLICHE FUNKTIONEN (toggleMode, toggleRave, manualId, toggleScanner) bleiben gleich wie vorher...
-   function toggleMode() {
+function toggleMode() {
     const clipper = document.getElementById('clipper');
     const frame = document.getElementById('sc-frame');
     const btn = document.getElementById('mode-btn');
     const viewport = document.querySelector('meta[name="viewport"]');
 
-    // Wenn isLocked TRUE ist, ist das Guckloch aktiv (Titel versteckt)
-    if (isLocked) {
-        // JETZT: TITEL ANZEIGEN / LOGIN ÖFFNEN
+    if (!isLocked) { // Switch zum Guckloch (Verstecken)
         clipper.className = "clipper-play";
         frame.className = "frame-pos-play";
-        btn.innerText = "Titel verstecken";
+        btn.innerText = "Titel anzeigen";
         
-        viewport.setAttribute("content", "width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes");
-        isLocked = false; 
-    } else {
-        // JETZT: ZURÜCK ZUM GUCKLOCH (VERSTECKEN)
+        // Zurück zum Standard: Kein Scrollen, kein Zoom
+        clipper.style.overflow = "hidden"; 
+        viewport.setAttribute("content", "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no");
+        
+        isLocked = true;
+    } else { // Switch zum Anzeigen / Login
         clipper.className = "clipper-setup";
         frame.className = "frame-pos-setup";
-        btn.innerText = "Titel anzeigen / Login";
+        btn.innerText = "Titel verstecken";
         
-        viewport.setAttribute("content", "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no");
-        window.scrollTo(0, 0);
-        isLocked = true;
+        // DER TRICK: Wir erlauben Scrollen und Zoom nur in diesem Moment
+        clipper.style.overflow = "auto"; 
+        viewport.setAttribute("content", "width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes");
+        
+        isLocked = false;
     }
 }
     function toggleRave() { document.getElementById('body').classList.toggle('rave-active'); }
