@@ -198,55 +198,39 @@
         .rave-active .action-btn { animation: raveColorsA 1.5s infinite; border: none; }
 
         /* --- PLAYER STUFF --- */
-        #clipper {
-            margin: 20px auto; 
-            border: 4px solid var(--orange); 
-            background: #000; 
-            transition: all 0.3s ease;
-            position: relative;
-            z-index: 20;
-        }
-        
-        /* Der versteckte Modus (Guckloch) */
-        .clipper-setup { 
-            width: 310px; 
-            height: 220px; 
-            border-radius: 16px; 
-            overflow: hidden; /* Hier bleibt alles versteckt */
-        }
-        
-        /* Der Login/Anzeigen Modus (Groß & Scrollbar) */
-        .clipper-play { 
-            width: 95vw; 
-            height: 70vh; 
-            border-radius: 8px; 
-            overflow: auto !important; /* Erlaubt Scrollen */
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        #sc-frame { 
-            border: none; 
-            transition: all 0.3s ease;
-        }
-        
-        /* Position im Guckloch-Modus */
-        .frame-pos-setup { 
-            position: absolute;
-            width: 600px; 
-            height: 220px; 
-            top: 0; 
-            left: 0; 
-        }
-        
-        /* Position im Login-Modus (Vollbild im Clipper) */
-        .frame-pos-play { 
-            position: relative;
-            width: 1000px; /* Breite erhöhen für Zoom/Desktop-Ansicht */
-            height: 1000px; 
-            top: 0; 
-            left: 0; 
-        }
+       .clipper-setup { 
+    width: 310px !important; 
+    height: 220px !important; 
+    border-radius: 16px; 
+    overflow: hidden !important; 
+}
 
+/* Das Login-Fenster (Anzeigen-Modus) - Groß & Scrollbar */
+.clipper-play { 
+    width: 95vw !important; 
+    height: 80vh !important; 
+    border-radius: 8px; 
+    overflow: auto !important; 
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Frame-Position im Guckloch (Versteckt) */
+.frame-pos-setup { 
+    position: absolute;
+    width: 600px !important; 
+    height: 220px !important; 
+    top: 0; 
+    left: 0; 
+}
+
+/* Frame-Position im Login (Anzeigen) */
+.frame-pos-play { 
+    position: relative;
+    width: 1000px !important; 
+    height: 1000px !important; 
+    top: 0; 
+    left: 0; 
+}
         /* --- BUTTONS --- */
         .action-btn { 
             background: var(--orange); color: white; border: none; width: 100%; padding: 16px; 
@@ -433,30 +417,26 @@
     const btn = document.getElementById('mode-btn');
     const viewport = document.querySelector('meta[name="viewport"]');
 
+    // Wenn isLocked TRUE ist, ist das Guckloch aktiv (Titel versteckt)
     if (isLocked) {
-        // MODUS: TITEL ANZEIGEN / LOGIN
+        // JETZT: TITEL ANZEIGEN / LOGIN ÖFFNEN
         clipper.className = "clipper-play";
         frame.className = "frame-pos-play";
         btn.innerText = "Titel verstecken";
         
-        // Zoomen erlauben
         viewport.setAttribute("content", "width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes");
-        
-        isLocked = false;
+        isLocked = false; 
     } else {
-        // MODUS: GUCKLOCH (SPIELMODUS)
+        // JETZT: ZURÜCK ZUM GUCKLOCH (VERSTECKEN)
         clipper.className = "clipper-setup";
         frame.className = "frame-pos-setup";
         btn.innerText = "Titel anzeigen / Login";
         
-        // Zoom zurücksetzen
         viewport.setAttribute("content", "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no");
-        window.scrollTo(0, 0); // Zurück zur Mitte
-        
+        window.scrollTo(0, 0);
         isLocked = true;
     }
 }
-
     function toggleRave() { document.getElementById('body').classList.toggle('rave-active'); }
     function manualId() { const id = prompt("ID:"); if (id) loadSong(id); }
 
