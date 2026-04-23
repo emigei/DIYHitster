@@ -5,24 +5,20 @@
     <meta name="referrer" content="no-referrer-when-downgrade">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HITSTER DIY - Bright Vinyl Edition</title>
-
     <script src="https://w.soundcloud.com/player/api.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
-
     <style>
-        :root {
-            --orange: #ff5500;
-            --bg: #0d0d0d;
+        :root { 
+            --orange: #ff5500; 
+            --bg: #0d0d0d; 
             --card-bg: rgba(22, 22, 22, 0.95);
-            --vinyl-gray: #252525;
+            --vinyl-gray: #252525; 
         }
 
+        /* --- VERBESSERTE, HELLE VINYL ANIMATION --- */
         .bg-animation {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             z-index: -1;
             background: radial-gradient(circle at center, #202020 0%, #0a0a0a 100%);
             display: flex;
@@ -49,19 +45,18 @@
                 var(--vinyl-gray) 3px
             );
             border-radius: 50%;
-            border: 4px solid #444;
-            box-shadow: 0 0 40px rgba(255, 85, 0, 0.2),
-                        inset 0 0 60px rgba(0,0,0,0.5);
+            border: 4px solid #444; 
+            box-shadow: 0 0 40px rgba(255, 85, 0, 0.2), inset 0 0 60px rgba(0,0,0,0.5);
         }
 
         .vinyl-record::after {
             content: "";
             position: absolute;
-            inset: 0;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: conic-gradient(
                 from 0deg,
                 transparent 0%,
-                rgba(255,255,255,0.15) 10%,
+                rgba(255,255,255,0.15) 10%, 
                 transparent 25%,
                 transparent 45%,
                 rgba(255,255,255,0.15) 50%,
@@ -73,11 +68,11 @@
 
         .vinyl-ring {
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             border: 2px solid rgba(255, 85, 0, 0.3);
             border-radius: 50%;
+            box-shadow: 0 0 15px rgba(255, 85, 0, 0.1);
         }
 
         @keyframes rotateVinyl {
@@ -85,212 +80,344 @@
             to { transform: rotate(360deg); }
         }
 
+        /* --- RAVE ANIMATIONEN --- */
         @keyframes strobo {
             0% { background: #000; }
             50% { background: #b8b7b7; }
             100% { background: #000; }
         }
 
-        body {
-            font-family: sans-serif;
-            background: var(--bg);
-            color: white;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow: hidden;
+        @keyframes raveColorsA {
+            0% { border-color: #ff00ff; box-shadow: 0 0 30px #ff00ff; color: #ff00ff; }
+            33% { border-color: #00ffff; box-shadow: 0 0 30px #00ffff; color: #00ffff; }
+            66% { border-color: #ffff00; box-shadow: 0 0 30px #ffff00; color: #ffff00; }
+            100% { border-color: #ff00ff; box-shadow: 0 0 30px #ff00ff; color: #ff00ff; }
         }
 
-        .card {
-            background: var(--card-bg);
-            border-radius: 32px;
-            padding: 30px;
-            width: 90%;
-            max-width: 360px;
-            text-align: center;
-            border: 2px solid #444;
+        @keyframes raveColorsB {
+            0% { border-color: #ffff00; box-shadow: 0 0 40px #ffff00; border:4px solid #ffff00; background: #ffff00;}
+            33% { border-color: #ff00ff; box-shadow: 0 0 40px #ff00ff; border:4px solid #ff00ff; background: #ff00ff;}
+            66% { border-color: #00ffff; box-shadow: 0 0 40px #00ffff; border:4px solid #00ffff; background: #00ffff;}
+            100% { border-color: #ffff00; box-shadow: 0 0 40px #ffff00; border:4px solid #ffff00; background: #ffff00;}
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px); }
+            50% { transform: translate(-3px, 2px); }
+            100% { transform: translate(1px, -1px); }
+        }
+
+        /* --- BASIS STYLING --- */
+        body { 
+            font-family: sans-serif; background: var(--bg); color: white; margin: 0; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; overflow: hidden; transition: all 0.1s;
+        }
+
+        .card { 
+            background: var(--card-bg); border-radius: 32px; padding: 30px; 
+            width: 90%; max-width: 360px; text-align: center; border: 2px solid #444; 
+            position: relative; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
             backdrop-filter: blur(8px);
+            box-shadow: 0 15px 45px rgba(0,0,0,0.9);
         }
 
-        #playlist-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
+        /* --- NEU: PLAYLIST ITEM STYLING --- */
+      /* --- MODERNES PLAYLIST DESIGN --- */
+#playlist-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 5px;
+}
 
-        .playlist-item {
-            display: flex;
-            align-items: center;
-            border-radius: 18px;
-            padding: 4px 15px;
-        }
+.playlist-item {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 18px;
+    padding: 4px 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
 
-        .playlist-name-btn {
-            background: none;
-            border: none;
-            color: white;
-            flex-grow: 1;
-            text-align: left;
-            cursor: pointer;
-        }
+/* Hover-Effekt für die ganze Zeile */
+.playlist-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+}
 
-        .playlist-checkbox {
-            width: 22px;
-            height: 22px;
-            appearance: none;
-            border: 2px solid var(--orange);
-            border-radius: 6px;
-        }
+.playlist-name-btn {
+    background: none;
+    border: none;
+    color: white;
+    flex-grow: 1;
+    text-align: left;
+    padding: 14px 10px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+}
 
-        .playlist-checkbox:checked {
-            background: var(--orange);
-        }
+/* Die Checkbox stylen */
+.playlist-checkbox {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    appearance: none; /* Standard-Look entfernen */
+    border: 2px solid var(--item-color, var(--orange));
+    border-radius: 6px;
+    position: relative;
+    transition: all 0.2s;
+}
 
-        .hint-box {
-            display: none;
-            margin-top: 12px;
-            padding: 12px;
-            border-radius: 14px;
-            background: rgba(255, 85, 0, 0.12);
-        }
+.playlist-checkbox:checked {
+    background: var(--item-color, var(--orange));
+    box-shadow: 0 0 10px var(--item-color, var(--orange));
+}
 
-        .action-btn {
-            background: var(--orange);
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 16px;
-            border-radius: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 15px;
-        }
+.playlist-checkbox:checked::after {
+    content: "✓";
+    position: absolute;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    left: 4px;
+    top: 0px;
+}
 
-        .secondary-btn {
-            background: #1d1d1d;
+.hint-box {
+    display: none;
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(255, 85, 0, 0.12);
+    border: 1px solid rgba(255, 85, 0, 0.35);
+    color: #ffd7c2;
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: left;
+}
+
+.secondary-btn {
+    background: #1d1d1d;
+    color: #f5f5f5;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    margin-top: 10px;
+}
+
+
+        /* --- RAVE AKTIV --- */
+        .rave-active { animation: strobo 0.1s infinite !important; }
+        .rave-active .bg-animation { display: none; } 
+        .rave-active .card { animation: raveColorsB 1.5s infinite, shake 0.1s infinite; }
+        .rave-active #clipper { animation: raveColorsA 1.5s infinite !important; }
+        .rave-active .action-btn { animation: raveColorsA 1.5s infinite; border: none; }
+
+        /* --- PLAYER STUFF --- */
+        #clipper {
+            margin: 20px auto; overflow: hidden; border: 4px solid var(--orange); 
+            background: #000; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
         }
+        .clipper-setup { width: 310px; height: 220px; border-radius: 16px; }
+        .clipper-play { width: 50px; height: 50px; border-radius: 50%; }
+
+        #sc-frame { position: absolute; width: 600px; height: 220px; border: none; }
+        .frame-pos-setup { top: 0; left: 0; }
+        .frame-pos-play { top: -7px; left: -5px; } 
+
+        /* --- BUTTONS --- */
+        .action-btn { 
+            background: var(--orange); color: white; border: none; width: 100%; padding: 16px; 
+            border-radius: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; 
+            text-transform: uppercase; transition: 0.2s;
+        }
+        .party-btn {
+            background: #333; color: #999; font-size: 10px; padding: 10px; border: none;
+            border-radius: 12px; margin-top: 20px; cursor: pointer; width: 100%;
+        }
+        .rave-active .party-btn { background: #fff; color: #000; font-weight: bold; }
+
+        #status { color: var(--orange); font-weight: bold; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        .dev-skip { position: absolute; top: 15px; right: 15px; background: none; border: none; color: #444; font-size: 10px; }
     </style>
 </head>
 <body id="body">
 
+<div class="bg-animation">
+    <div class="vinyl-container">
+        <div class="vinyl-record"></div>
+        <div class="vinyl-ring" style="width: 650px; height: 650px;"></div>
+        <div class="vinyl-ring" style="width: 780px; height: 780px; opacity: 0.3;"></div>
+    </div>
+</div>
+
 <div id="setup-screen" class="card">
     <div id="status">Wähle eine Playlist</div>
-    <div id="playlist-buttons"></div>
-
-    <button class="action-btn" onclick="startCustomMix()">✓ Auswahl mixen</button>
-    <button class="action-btn" onclick="selectAllMixed()">🔀 ALLE MIXEN</button>
+    <div id="playlist-buttons" style="margin-top: 20px; max-height: 300px; overflow-y: auto;">
+    </div>
+    <button class="action-btn" onclick="startCustomMix()" style="background: var(--orange);">✓ Auswahl mixen</button>
+    <button class="action-btn" onclick="selectAllMixed()" style="background: linear-gradient(45deg, #ff5500, #ff00ff); margin-top: 10px;">🔀 ALLE MIXEN</button>
 </div>
 
 <div id="game-screen" style="display:none;">
     <div class="card">
-        <div id="game-status">Bereit</div>
-
+        <button class="dev-skip" onclick="manualId()">DEV</button>
+        <div id="game-status" style="color: var(--orange); font-weight: bold; margin-bottom: 15px;">Bereit</div>
+        
         <div id="player-area" style="display:none;">
-            <div id="clipper">
-                <iframe
-                    id="sc-frame"
-                    scrolling="yes"
-                    frameborder="no"
-                    allow="autoplay"
-                    src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1&show_artwork=false">
-                </iframe>
+            <div id="clipper" class="clipper-setup">
+                <iframe id="sc-frame" scrolling="yes" frameborder="no" allow="autoplay" 
+                    src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1&show_artwork=false"></iframe>
             </div>
-
-            <button id="mode-btn" class="action-btn" onclick="toggleMode()">
-                Titel verstecken
-            </button>
-
-            <button class="action-btn secondary-btn" onclick="openPremiumBlind()">
-                Premium blind öffnen
-            </button>
-
+            <button id="mode-btn" class="action-btn" onclick="toggleMode()">Titel verstecken</button>
+            <button id="premium-btn" class="action-btn secondary-btn" onclick="openPremiumBlind()">Premium blind öffnen</button>
             <div id="auth-hint" class="hint-box"></div>
         </div>
 
-        <div id="reader" style="display:none;"></div>
-
-        <button class="action-btn" onclick="toggleScanner()">
-            📷 Karte Scannen
-        </button>
+        <div id="reader" style="width:100%; border-radius:20px; overflow:hidden; margin-top:15px; display:none; border: 1px solid #333;"></div>
+        <button class="action-btn" id="scan-btn" onclick="toggleScanner()" style="margin-top:20px;">📷 Karte Scannen</button>
+        
+        <button class="party-btn" onclick="toggleRave()">🚀 RAVE MODE AKTIVIEREN</button>
+        <button class="party-btn" onclick="location.reload()" style="margin-top:10px; opacity: 0.5;">⬅ Playlist wechseln</button>
     </div>
 </div>
 
 <script>
-let html5QrCode;
-let isLocked = false;
-let scWidget;
-let allPlaylists = {};
-let currentPlaylistData = null;
-let currentSongUrl = null;
-let pendingPlayerRefresh = false;
-let lastAuthRefreshAt = 0;
+    let html5QrCode;
+    let isLocked = false;
+    let scWidget;
+    let allPlaylists = {};
+    let currentPlaylistData = null;
+    let currentSongUrl = null;
+    let pendingPlayerRefresh = false;
+    let lastAuthRefreshAt = 0;
+    const AUTH_REFRESH_DEBOUNCE_MS = 1500;
 
-const AUTH_REFRESH_DEBOUNCE_MS = 1500;
+    window.onload = async () => {
+        scWidget = SC.Widget(document.getElementById('sc-frame'));
+        registerAuthRefreshHandlers();
+        
+        try {
+            const res = await fetch('songs.json');
+            allPlaylists = await res.json();
+            setupPlaylistMenu();
 
-window.onload = async () => {
-    scWidget = SC.Widget(document.getElementById("sc-frame"));
-    registerAuthRefreshHandlers();
+            // 1. Prüfen, ob eine ID in der URL steckt (vom QR-Code)
+            const urlParams = new URLSearchParams(window.location.search);
+            const songId = urlParams.get('id');
 
-    try {
-        const res = await fetch("songs.json");
-        allPlaylists = await res.json();
-        setupPlaylistMenu();
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const songId = urlParams.get("id");
-
-        if (songId) {
-            const savedMix = localStorage.getItem("hitster_mix");
-
-            if (savedMix) {
-                currentPlaylistData = JSON.parse(savedMix);
-                startGame("Modus: Mix geladen");
-                loadSong(songId);
-            } else {
-                selectAllMixed();
-                loadSong(songId);
+            if (songId) {
+                // 2. Versuchen, gespeicherten Mix aus localStorage zu laden
+                const savedMix = localStorage.getItem('hitster_mix');
+                if (savedMix) {
+                    currentPlaylistData = JSON.parse(savedMix);
+                    startGame("Modus: Mix geladen");
+                    loadSong(songId);
+                } else {
+                    // Falls kein Mix gespeichert ist, nehmen wir "Alle Mixen" als Backup
+                    selectAllMixed(); 
+                    loadSong(songId);
+                }
             }
+        } catch (e) { 
+            document.getElementById('status').innerText = "Fehler beim Laden!";
         }
-    } catch {
-        document.getElementById("status").innerText =
-            "Fehler beim Laden!";
-    }
-};
+    };
 
-function saveAndStart(data, title) {
-    currentPlaylistData = data;
-    localStorage.setItem("hitster_mix", JSON.stringify(data));
-    startGame(title);
-}
-
-function selectPlaylist(name) {
-    saveAndStart(allPlaylists[name], "Modus: " + name);
-}
-
-function startGame(text) {
-    document.getElementById("setup-screen").style.display = "none";
-    document.getElementById("game-screen").style.display = "block";
-    document.getElementById("game-status").innerText = text;
-}
-
-function loadSong(id) {
-    if (!currentPlaylistData) selectAllMixed();
-
-    const song = currentPlaylistData[id];
-
-    if (!song) {
-        alert("Song nicht gefunden");
-        return;
+    function setupPlaylistMenu() {
+        const container = document.getElementById('playlist-buttons');
+        container.innerHTML = "";
+        Object.keys(allPlaylists).forEach(name => {
+            const playlist = allPlaylists[name];
+            const color = playlist.color || "#ff5500";
+            const item = document.createElement('div');
+            item.className = "playlist-item";
+            item.style.setProperty('--item-color', color);
+            item.style.borderLeft = `5px solid ${color}`;
+            item.innerHTML = `
+                <button class="playlist-name-btn" onclick="selectPlaylist('${name}')">${name}</button>
+                <input type="checkbox" class="playlist-checkbox" value="${name}">
+            `;
+            container.appendChild(item);
+        });
     }
 
-    currentSongUrl = song.url;
-    document.getElementById("player-area").style.display = "block";
+    // Hilfsfunktion zum Speichern des Mixes
+    function saveAndStart(data, title) {
+        currentPlaylistData = data;
+        localStorage.setItem('hitster_mix', JSON.stringify(data));
+        startGame(title);
+    }
 
-    loadCurrentSongIntoWidget(true);
-}
+    function selectPlaylist(name) {
+        saveAndStart(allPlaylists[name], "Modus: " + name);
+    }
 
+    function startCustomMix() {
+        const checkboxes = document.querySelectorAll('.playlist-checkbox:checked');
+        if (checkboxes.length === 0) {
+            alert("Bitte wähle mindestens eine Playlist aus!");
+            return;
+        }
+        let mixedSongs = {};
+        checkboxes.forEach(cb => {
+            const songs = allPlaylists[cb.value];
+            Object.keys(songs).forEach(id => {
+                if(id !== "image" && id !== "color") mixedSongs[id] = songs[id];
+            });
+        });
+        saveAndStart(mixedSongs, "Modus: Eigener Mix");
+    }
+
+    function selectAllMixed() {
+        let mixedSongs = {};
+        Object.keys(allPlaylists).forEach(pName => {
+            const songs = allPlaylists[pName];
+            Object.keys(songs).forEach(id => {
+                if(id !== "image" && id !== "color") mixedSongs[id] = songs[id];
+            });
+        });
+        saveAndStart(mixedSongs, "Modus: 🔀 Alles gemischt");
+    }
+
+    function startGame(statusText) {
+        document.getElementById('setup-screen').style.display = "none";
+        document.getElementById('game-screen').style.display = "block";
+        document.getElementById('game-status').innerText = statusText;
+    }
+
+    async function loadSong(id) {
+        // Falls durch direkten Link aufgerufen und kein Mix da, alles mixen
+        if (!currentPlaylistData) selectAllMixed();
+        
+        const song = currentPlaylistData[id];
+        if (song) {
+            currentSongUrl = song.url;
+            hideAuthHint();
+            document.getElementById('game-status').innerText = "Track #" + id + " geladen...";
+            document.getElementById('player-area').style.display = "block";
+            
+            const clipper = document.getElementById('clipper');
+            const frame = document.getElementById('sc-frame');
+            const btn = document.getElementById('mode-btn');
+            
+            clipper.className = "clipper-play";
+            frame.className = "frame-pos-play";
+            btn.innerText = "Titel anzeigen";
+            isLocked = true;
+
+            loadCurrentSongIntoWidget(true);
+        } else {
+            alert("ID '" + id + "' in der aktuellen Playlist nicht gefunden!");
+        }
+    }
+
+    // RESTLICHE FUNKTIONEN (toggleMode, toggleRave, manualId, toggleScanner) bleiben gleich wie vorher...
 function loadCurrentSongIntoWidget(forceRefresh = false) {
     if (!currentSongUrl || !scWidget) return;
 
@@ -303,10 +430,7 @@ function loadCurrentSongIntoWidget(forceRefresh = false) {
 
     if (forceRefresh) {
         const frame = document.getElementById("sc-frame");
-        frame.src = buildSoundCloudEmbedUrl(
-            currentSongUrl,
-            Date.now()
-        );
+        frame.src = buildSoundCloudEmbedUrl(currentSongUrl, Date.now());
         scWidget = SC.Widget(frame);
     }
 }
@@ -319,25 +443,23 @@ function buildSoundCloudEmbedUrl(songUrl, cacheBuster) {
         color: "ff5500"
     });
 
-    params.set("t", cacheBuster);
-
-    return `https://w.soundcloud.com/player/?${params}`;
+    params.set("t", String(cacheBuster));
+    return `https://w.soundcloud.com/player/?${params.toString()}`;
 }
 
 function registerAuthRefreshHandlers() {
     window.addEventListener("focus", maybeRefreshPlayerAuth);
     window.addEventListener("pageshow", maybeRefreshPlayerAuth);
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) maybeRefreshPlayerAuth();
+    });
 }
 
 function maybeRefreshPlayerAuth() {
     if (!currentSongUrl) return;
 
     const now = Date.now();
-
-    if (now - lastAuthRefreshAt < AUTH_REFRESH_DEBOUNCE_MS) {
-        return;
-    }
-
+    if (now - lastAuthRefreshAt < AUTH_REFRESH_DEBOUNCE_MS) return;
     lastAuthRefreshAt = now;
 
     if (isLocked) {
@@ -350,63 +472,158 @@ function maybeRefreshPlayerAuth() {
 
 function refreshPlayerAuth() {
     loadCurrentSongIntoWidget(true);
+    showAuthHint();
     pendingPlayerRefresh = false;
 }
 
-function toggleMode() {
-    isLocked = !isLocked;
+function showAuthHint() {
+    const hint = document.getElementById("auth-hint");
+    if (!hint) return;
 
-    document.getElementById("mode-btn").innerText =
-        isLocked ? "Titel anzeigen" : "Titel verstecken";
+    hint.style.display = "block";
+    hint.innerText = "SoundCloud wurde nach dem Tab-Wechsel neu geladen. So wird ein neuer Login oder Pro-Status aus einem anderen Tab übernommen.";
+}
 
-    if (!isLocked && pendingPlayerRefresh) {
-        refreshPlayerAuth();
-    }
+function hideAuthHint() {
+    const hint = document.getElementById("auth-hint");
+    if (!hint) return;
+
+    hint.style.display = "none";
+    hint.innerText = "";
 }
 
 function openPremiumBlind() {
     if (!currentSongUrl) {
-        alert("Kein Track geladen");
+        alert("Es ist noch kein Track geladen.");
         return;
     }
 
-    window.open(currentSongUrl, "_blank");
-}
+    const popup = window.open("", "_blank");
 
-function toggleScanner() {
-    const reader = document.getElementById("reader");
-
-    if (reader.style.display === "block") {
-        html5QrCode.stop().then(() => {
-            reader.style.display = "none";
-        });
+    if (!popup) {
+        window.location.href = currentSongUrl;
         return;
     }
 
-    reader.style.display = "block";
-    html5QrCode = new Html5Qrcode("reader");
-
-    html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        (text) => {
-            try {
-                const url = new URL(text);
-                const id = url.searchParams.get("id");
-
-                if (id) {
-                    html5QrCode.stop().then(() => {
-                        reader.style.display = "none";
-                        loadSong(id);
-                    });
+    const loadingHtml = `
+        <!DOCTYPE html>
+        <html lang="de">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>SoundCloud wird geöffnet</title>
+            <style>
+                body {
+                    margin: 0;
+                    min-height: 100vh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #050505;
+                    color: #ffffff;
+                    font-family: sans-serif;
+                    text-align: center;
+                    padding: 24px;
                 }
-            } catch {
-                alert("Kein gültiger Hitster-Link!");
-            }
-        }
-    );
-}
-</script>
+                .box {
+                    max-width: 320px;
+                    opacity: 0.92;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="box">
+                <div>Premium-Track wird geöffnet…</div>
+                <div style="margin-top:10px; font-size:13px; color:#bdbdbd;">
+                    Zurück zu HITSTER wechseln, sobald die Wiedergabe läuft.
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
 
+    popup.document.open();
+    popup.document.write(loadingHtml);
+    popup.document.close();
+
+    showPremiumHint();
+
+    setTimeout(() => {
+        popup.location.replace(currentSongUrl);
+        try {
+            window.focus();
+        } catch (e) {}
+    }, 350);
+}
+
+function showPremiumHint() {
+    const hint = document.getElementById("auth-hint");
+    if (!hint) return;
+
+    hint.style.display = "block";
+    hint.innerText = "Für Premium-Fälle wird der Track blind in SoundCloud geöffnet, damit deine Seite den Titel nicht verrät. Je nach Handy bleibst du kurz im neuen Tab oder in der App.";
+}
+
+function toggleMode() {
+    const clipper = document.getElementById('clipper');
+    const frame = document.getElementById('sc-frame');
+    const btn = document.getElementById('mode-btn');
+    const viewport = document.querySelector('meta[name="viewport"]');
+
+    if (!isLocked) { // Switch zum Guckloch (Verstecken)
+        clipper.className = "clipper-play";
+        frame.className = "frame-pos-play";
+        btn.innerText = "Titel anzeigen";
+        
+        // Zurück zum Standard: Kein Scrollen, kein Zoom
+        clipper.style.overflow = "hidden"; 
+        viewport.setAttribute("content", "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no");
+        
+        isLocked = true;
+        hideAuthHint();
+    } else { // Switch zum Anzeigen / Login
+        clipper.className = "clipper-setup";
+        frame.className = "frame-pos-setup";
+        btn.innerText = "Titel verstecken";
+        
+        // DER TRICK: Wir erlauben Scrollen und Zoom nur in diesem Moment
+        clipper.style.overflow = "auto"; 
+        viewport.setAttribute("content", "width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes");
+        
+        isLocked = false;
+        if (pendingPlayerRefresh) {
+            refreshPlayerAuth();
+        }
+    }
+}
+    function toggleRave() { document.getElementById('body').classList.toggle('rave-active'); }
+    function manualId() { const id = prompt("ID:"); if (id) loadSong(id); }
+
+    function toggleScanner() {
+        const readerEl = document.getElementById('reader');
+        if (readerEl.style.display === 'block') {
+            html5QrCode.stop().then(() => { readerEl.style.display = 'none'; });
+        } else {
+            readerEl.style.display = 'block';
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
+                try {
+                    const url = new URL(text);
+                    const id = url.searchParams.get("id");
+                    if (id) { 
+                        html5QrCode.stop().then(() => { 
+                            readerEl.style.display = 'none'; 
+                            loadSong(id); 
+                        }); 
+                    }
+                } catch(e) {
+                    alert("Kein gültiger Hitster-Link!");
+                }
+            }, () => {});
+        }
+    }
+</script>
+    
 </body>
+
 </html>
