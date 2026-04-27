@@ -178,8 +178,8 @@
             width: 600px;
             height: 220px;
             border: none;
-            left: -5px;
-            top: -7px;
+            left: 0;
+            top: -166px;
         }
 
         #clipper.is-open #media-frame,
@@ -189,6 +189,21 @@
         }
 
         #youtube-player {
+            display: none;
+        }
+
+        #guckloch-mask {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+            border-radius: inherit;
+            background:
+                radial-gradient(circle at 18px 32px, transparent 0 11px, rgba(0, 0, 0, 0.96) 13px),
+                rgba(0, 0, 0, 0.96);
+        }
+
+        #clipper.is-open #guckloch-mask {
             display: none;
         }
 
@@ -248,6 +263,7 @@
                     src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1&show_artwork=false"
                 ></iframe>
                 <div id="youtube-player"></div>
+                <div id="guckloch-mask"></div>
             </div>
 
             <button id="mode-btn" class="action-btn" onclick="toggleMode()">Titel anzeigen</button>
