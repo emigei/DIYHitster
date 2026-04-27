@@ -1,11 +1,11 @@
 {
   "Rock": {
     "color": "#ff4400",
-    "100": { "url": "https://soundcloud.com/herr-manneling-1/motorhead?in=emily-gei/sets/hitster-rock//s-ozXt9iBanrU", "year": "1980", "title": "Ace of Spades", "artist": "Motörhead" },
-    "101": { "url": "https://soundcloud.com/system-of-a-down-official/aerials?in=emily-gei/sets/hitster-rock//s-ozXt9iBanrU", "year": "2001", "title": "Aerials", "artist": "System Of A Down" },
-    "102": { "url": "https://soundcloud.com/happyhourband/blink-182-all-the-small-things?in=emily-gei/sets/hitster-rock//s-ozXt9iBanrU", "year": "1999", "title": "All The Small Things", "artist": "blink-182" },
-    "103": { "url": "https://soundcloud.com/die-toten-hosen-official/alles-aus-liebe?in=emily-gei/sets/hitster-rock//s-ozXt9iBanrU", "year": "1993", "title": "Alles aus Liebe", "artist": "Die Toten Hosen" },
-    "104": { "url": "https://soundcloud.com/bloodhound-gang/along-comes-mary-album-version?in=emily-gei/sets/hitster-rock//s-ozXt9iBanrU", "year": "1999", "title": "Along Comes Mary", "artist": "Bloodhound Gang" },
+    "100": { "url": "https://www.youtube.com/watch?v=3mbvWn1EY6g", "year": "1980", "title": "Ace of Spades", "artist": "Motörhead" },
+    "101": { "url": "https://www.youtube.com/watch?v=L-iepu3EtyE", "year": "2001", "title": "Aerials", "artist": "System Of A Down" },
+    "102": { "url": "https://www.youtube.com/watch?v=9Ht5RZpzPqw", "year": "1999", "title": "All The Small Things", "artist": "blink-182" },
+    "103": { "url": "https://www.youtube.com/watch?v=z752hzudXiY", "year": "1993", "title": "Alles aus Liebe", "artist": "Die Toten Hosen" },
+    "104": { "url": "https://www.youtube.com/watch?v=0RaLEVmuM4o", "year": "1999", "title": "Along Comes Mary", "artist": "Bloodhound Gang" },
     "105": { "url": "https://soundcloud.com/die-toten-hosen-official/altes-fieber?in=emily-gei/sets/hitster-rock//s-ozXt9iBanrU", "year": "2012", "title": "Altes Fieber", "artist": "Die Toten Hosen" },
     "106": { "url": "https://soundcloud.com/greenday/american-idiot-2?in=emily-gei/sets/hitster-rock//s-ozXt9iBanrU", "year": "2004", "title": "American Idiot", "artist": "Green Day" },
     "107": { "url": "https://soundcloud.com/user-726706277/amerika?in=emily-gei/sets/hitster-rock//s-ozXt9iBanrU", "year": "2004", "title": "Amerika", "artist": "Rammstein" },
