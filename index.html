@@ -203,8 +203,40 @@
                 rgba(0, 0, 0, 0.96);
         }
 
+        #clipper.is-youtube #guckloch-mask {
+            display: none;
+        }
+
         #clipper.is-open #guckloch-mask {
             display: none;
+        }
+
+        #youtube-locked-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 4;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.98);
+        }
+
+        #clipper.is-youtube.is-locked #youtube-locked-overlay {
+            display: flex;
+        }
+
+        .overlay-play-btn {
+            width: 42px;
+            height: 42px;
+            border: none;
+            border-radius: 50%;
+            background: var(--orange);
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 0 18px rgba(255, 85, 0, 0.35);
         }
 
         #reader {
@@ -264,6 +296,9 @@
                 ></iframe>
                 <div id="youtube-player"></div>
                 <div id="guckloch-mask"></div>
+                <div id="youtube-locked-overlay">
+                    <button type="button" id="youtube-overlay-play-btn" class="overlay-play-btn" onclick="toggleYouTubePlayback()">▶</button>
+                </div>
             </div>
 
             <button id="mode-btn" class="action-btn" onclick="toggleMode()">Titel anzeigen</button>
@@ -291,6 +326,7 @@
     let pendingPlayerRefresh = false;
     let lastAuthRefreshAt = 0;
     let currentPlaybackMode = "soundcloud";
+    let youtubeIsPlaying = false;
 
     const AUTH_REFRESH_DEBOUNCE_MS = 1500;
     const SOUND_CLOUD_PLAYER_OPTIONS = {
@@ -416,6 +452,8 @@
             selectAllMixed();
         }
 
+        stopActivePlayback();
+
         const song = currentPlaylistData[id];
 
         if (!song) {
@@ -443,9 +481,12 @@
     function activateSoundCloudPlayer(url) {
         currentPlaybackMode = "soundcloud";
         hideYouTubePlayer();
+        stopSoundCloudPlayback();
 
         const mediaFrame = document.getElementById("media-frame");
+        const clipper = document.getElementById("clipper");
         mediaFrame.style.display = "block";
+        clipper.classList.remove("is-youtube");
 
         loadSoundCloudTrack(url, true);
         showHint("SoundCloud-Modus aktiv.");
@@ -453,9 +494,12 @@
 
     function activateYouTubePlayer(url) {
         currentPlaybackMode = "youtube";
+        stopSoundCloudPlayback();
 
         const mediaFrame = document.getElementById("media-frame");
+        const clipper = document.getElementById("clipper");
         mediaFrame.style.display = "none";
+        clipper.classList.add("is-youtube");
 
         showYouTubePlayer();
         loadYouTubeVideo(url);
@@ -486,6 +530,16 @@
         return `https://w.soundcloud.com/player/?${params.toString()}`;
     }
 
+    function stopSoundCloudPlayback() {
+        if (!scWidget) return;
+
+        try {
+            scWidget.pause();
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     function ensureYouTubePlayer(videoId) {
         if (!ytApiReady || !videoId) return false;
 
@@ -500,6 +554,9 @@
                     playsinline: 1,
                     rel: 0,
                     modestbranding: 1
+                },
+                events: {
+                    onStateChange: handleYouTubeStateChange
                 }
             });
             return true;
@@ -529,7 +586,11 @@
 
     function hideYouTubePlayer() {
         const ytContainer = document.getElementById("youtube-player");
+        const clipper = document.getElementById("clipper");
         ytContainer.style.display = "none";
+        clipper.classList.remove("is-youtube");
+        youtubeIsPlaying = false;
+        syncYouTubeOverlayButton();
 
         if (ytPlayer && typeof ytPlayer.pauseVideo === "function") {
             try {
@@ -538,6 +599,38 @@
                 console.error(error);
             }
         }
+    }
+
+    function handleYouTubeStateChange(event) {
+        if (!window.YT) return;
+        youtubeIsPlaying = event.data === YT.PlayerState.PLAYING;
+        syncYouTubeOverlayButton();
+    }
+
+    function syncYouTubeOverlayButton() {
+        const overlayBtn = document.getElementById("youtube-overlay-play-btn");
+        if (!overlayBtn) return;
+        overlayBtn.innerText = youtubeIsPlaying ? "❚❚" : "▶";
+    }
+
+    function toggleYouTubePlayback() {
+        if (currentPlaybackMode !== "youtube" || !ytPlayer) return;
+
+        try {
+            if (youtubeIsPlaying) {
+                ytPlayer.pauseVideo();
+                return;
+            }
+
+            ytPlayer.playVideo();
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    function stopActivePlayback() {
+        stopSoundCloudPlayback();
+        hideYouTubePlayer();
     }
 
     function registerAuthRefreshHandlers() {
@@ -596,6 +689,7 @@
 
         isLocked = locked;
         clipper.classList.toggle("is-open", !locked);
+        clipper.classList.toggle("is-locked", locked);
         modeBtn.innerText = locked ? "Titel anzeigen" : "Titel verstecken";
 
         if (locked) {
@@ -708,6 +802,7 @@
     function manualId() {
         const id = prompt("ID:");
         if (id) {
+            stopActivePlayback();
             loadSong(id);
         }
     }
