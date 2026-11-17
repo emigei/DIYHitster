@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HITSTER DIY - Spotify-IDs suchen</title>
+<style>
+  body { font-family:sans-serif; background:#111; color:#fff; max-width:900px; margin:0 auto; padding:20px; }
+  button, input { padding:10px 14px; border-radius:10px; border:1px solid #444; background:#222; color:#fff; font-size:14px; }
+  button.go { background:#ff5500; border:none; font-weight:700; cursor:pointer; }
+  button:disabled { opacity:.4; }
+  #bar { height:10px; background:#333; border-radius:5px; margin:14px 0; overflow:hidden; }
+  #fill { height:100%; width:0; background:#ff5500; }
+  table { width:100%; border-collapse:collapse; font-size:13px; margin-top:12px; }
+  td, th { padding:6px; border-bottom:1px solid #333; text-align:left; vertical-align:top; }
+  .warn { color:#ffb36b; } .bad { color:#ff7b7b; } .muted { color:#aaa; }
+</style>
+</head>
+<body>
+<h2>Spotify-IDs zu songs.json hinzufügen</h2>
+<p class="muted">Redirect-URI für die Spotify-App: <code id="redir"></code></p>
+
+<div id="login-box">
+  <input id="client-input" placeholder="Spotify Client-ID" size="40">
+  <button class="go" onclick="login()">Mit Spotify anmelden</button>
+</div>
+
+<div id="work" style="display:none;">
+  <button class="go" id="start-btn" onclick="run()">Suche starten / fortsetzen</button>
+  <button id="dl-btn" onclick="download()">songs.json herunterladen</button>
+  <button onclick="if (confirm('Alle Ergebnisse löschen?')) { localStorage.removeItem('map_res'); location.reload(); }">Zurücksetzen</button>
+  <div id="bar"><div id="fill"></div></div>
+  <div id="stat" class="muted"></div>
+  <h3>Bitte prüfen (unsicher oder nicht gefunden)</h3>
+  <table><thead><tr><th>ID</th><th>Dein Song</th><th>Gefunden</th><th>Spotify-Link oder -ID</th></tr></thead><tbody id="list"></tbody></table>
+</div>
+
+<script>
+  const LS = localStorage, $ = (id) => document.getElementById(id);
+  const REDIRECT = location.origin + location.pathname;
+  const clientId = () => LS.getItem("sp_client") || "";
+  let data = {}, flat = [], res = JSON.parse(LS.getItem("map_res") || "{}"), running = false;
+  $("redir").innerText = REDIRECT;
+
+  const rand = (n) => Array.from(crypto.getRandomValues(new Uint8Array(n)), (b) => ("0" + b.toString(16)).slice(-2)).join("").slice(0, n);
+  async function sha(t) {
+    const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
+    return btoa(String.fromCharCode(...new Uint8Array(h))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  async function login() {
+    const typed = $("client-input").value.trim();
+    if (typed) LS.setItem("sp_client", typed);
+    if (!clientId()) return alert("Client-ID fehlt.");
+    const v = rand(64); LS.setItem("sp_verifier", v);
+    location.href = "https://accounts.spotify.com/authorize?" + new URLSearchParams({
+      client_id: clientId(), response_type: "code", redirect_uri: REDIRECT,
+      code_challenge_method: "S256", code_challenge: await sha(v)
+    });
+  }
+  async function tokenRequest(p) {
+    const r = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ client_id: clientId(), ...p })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error_description || d.error);
+    LS.setItem("m_access", d.access_token);
+    LS.setItem("m_expires", String(Date.now() + d.expires_in * 1000));
+    if (d.refresh_token) LS.setItem("m_refresh", d.refresh_token);
+  }
+  async function token() {
+    if (Date.now() > Number(LS.getItem("m_expires") || 0) - 60000)
+      await tokenRequest({ grant_type: "refresh_token", refresh_token: LS.getItem("m_refresh") });
+    return LS.getItem("m_access");
+  }
+
+  window.onload = async () => {
+    const p = new URLSearchParams(location.search);
+    if (p.get("code")) {
+      try {
+        await tokenRequest({ grant_type: "authorization_code", code: p.get("code"), redirect_uri: REDIRECT, code_verifier: LS.getItem("sp_verifier") });
+      } catch (e) { return alert("Anmeldung fehlgeschlagen: " + e.message); }
+      history.replaceState(null, "", REDIRECT);
+    }
+    if (!LS.getItem("m_refresh")) return;
+    $("login-box").style.display = "none"; $("work").style.display = "block";
+    data = await (await fetch("songs.json")).json();
+    for (const pl in data) for (const id in data[pl]) if (id !== "color" && id !== "image") flat.push({ id, s: data[pl][id] });
+    render();
+  };
+
+  /* ---------- Abgleich ---------- */
+  const norm = (t) => (t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/\(.*?\)|\[.*?\]/g, " ").replace(/\s-\s.*$/, "").replace(/\b(feat|ft|featuring)\b.*$/, "")
+    .replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  async function search(s) {
+    const q = encodeURIComponent(s.title + " " + s.artist);
+    for (let tries = 0; tries < 5; tries++) {
+      const r = await fetch("https://api.spotify.com/v1/search?type=track&limit=10&market=DE&q=" + q, {
+        headers: { Authorization: "Bearer " + await token() }
+      });
+      if (r.status === 429) { await sleep((Number(r.headers.get("Retry-After")) || 5) * 1000 + 500); continue; }
+      if (!r.ok) return { status: "fehler", note: "HTTP " + r.status };
+      const items = (await r.json()).tracks.items;
+      const nt = norm(s.title), na = norm(s.artist), year = parseInt(s.year) || 0;
+      const cands = items.map((it) => {
+        const t = norm(it.name);
+        const titleEq = t === nt, titlePart = titleEq || (nt && (t.startsWith(nt) || nt.startsWith(t)));
+        const artist = it.artists.some((a) => { const x = norm(a.name); return x && (na.includes(x) || x.includes(na)); });
+        const diff = Math.abs((parseInt(it.album.release_date) || year) - year);
+        return { it, titleEq, artist, score: (titleEq ? 2 : titlePart ? 1 : 0) + (artist ? 2 : 0) - diff * 0.01 };
+      }).sort((a, b) => b.score - a.score);
+      const best = cands[0];
+      if (!best || best.score < 1) return { status: "nicht gefunden" };
+      const found = best.it.name + " – " + best.it.artists.map((a) => a.name).join(", ");
+      return { spotify: best.it.id, found, status: best.titleEq && best.artist ? "sicher" : "unsicher" };
+    }
+    return { status: "fehler", note: "Rate-Limit" };
+  }
+
+  async function run() {
+    if (running) return;
+    running = true; $("start-btn").disabled = true;
+    for (const { id, s } of flat) {
+      if (res[id] && res[id].status !== "fehler") continue;
+      try { res[id] = await search(s); } catch (e) { res[id] = { status: "fehler", note: e.message }; }
+      LS.setItem("map_res", JSON.stringify(res));
+      render();
+      await sleep(250);
+    }
+    running = false; $("start-btn").disabled = false;
+  }
+
+  function parseId(v) {
+    const m = v.match(/track\/([A-Za-z0-9]{22})/) || v.trim().match(/^([A-Za-z0-9]{22})$/);
+    return m ? m[1] : null;
+  }
+
+  function setManual(id, v) {
+    const sid = parseId(v);
+    if (sid) res[id] = { spotify: sid, found: "manuell", status: "manuell" };
+    LS.setItem("map_res", JSON.stringify(res));
+    render();
+  }
+
+  function render() {
+    const done = flat.filter((f) => res[f.id]).length;
+    const count = (st) => flat.filter((f) => res[f.id] && res[f.id].status === st).length;
+    $("fill").style.width = (flat.length ? (done / flat.length) * 100 : 0) + "%";
+    $("stat").innerText = done + " / " + flat.length + " bearbeitet · sicher: " + count("sicher") +
+      " · manuell: " + count("manuell") + " · unsicher: " + count("unsicher") +
+      " · nicht gefunden: " + count("nicht gefunden") + " · Fehler: " + count("fehler");
+    const body = $("list"); body.innerHTML = "";
+    flat.filter((f) => res[f.id] && !["sicher", "manuell"].includes(res[f.id].status)).forEach(({ id, s }) => {
+      const r = res[id], tr = document.createElement("tr");
+      const cells = [id, s.title + " – " + s.artist + " (" + s.year + ")", (r.found || r.note || "") + " [" + r.status + "]"];
+      cells.forEach((c, i) => { const td = document.createElement("td"); td.innerText = c; if (i === 2) td.className = r.status === "unsicher" ? "warn" : "bad"; tr.appendChild(td); });
+      const td = document.createElement("td"), inp = document.createElement("input");
+      inp.size = 28; inp.placeholder = "Link einfügen + Enter";
+      inp.onkeydown = (e) => { if (e.key === "Enter") setManual(id, inp.value); };
+      td.appendChild(inp); tr.appendChild(td); body.appendChild(tr);
+    });
+  }
+
+  function download() {
+    const out = JSON.parse(JSON.stringify(data));
+    for (const pl in out) for (const id in out[pl]) {
+      if (id === "color" || id === "image") continue;
+      const r = res[id];
+      if (r && r.spotify) out[pl][id].spotify = r.spotify;
+    }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: "application/json" }));
+    a.download = "songs.json"; a.click();
+  }
+</script>
+</body>
+</html>
