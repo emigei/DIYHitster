@@ -93,13 +93,13 @@
   const INFO = {
     mode: () => ({
       classic: ["Klassisch", "Karte scannen, Song hören, Karte in die Zeitleiste legen, dann Auflösen. Wer zuerst 10 Karten richtig liegen hat, gewinnt. Wer Interpret und Titel nennt, bekommt einen Joker zum Anfechten."],
-      snippet: ["Hörschnipsel-Leiter", "Der Song spielt nur 5 Sekunden. Wer mehr hören will, tippt auf +10 Sek. und zahlt dafür (Vorschlag: 1 Joker pro Verlängerung)."],
+      snippet: ["Hörschnipsel-Leiter", "Der Song spielt nur 5 Sekunden. Wer mehr hören will, tippt auf +10 Sek. Was eine Verlängerung kostet, steht beim i neben dem Button.\n\nVorschlag: 1 Joker pro Verlängerung."],
       bombe: ["Bombe", "Der Song startet an einer zufälligen Stelle und stoppt nach 15 bis 45 Sekunden von selbst. Wer das Handy beim Stopp hält, ordnet die Karte ein."]
     }[MODE]),
     controls: () => MODE === "classic"
       ? ["Bedienung", "▶ / ❚❚ startet und pausiert den Song.\n↺ spielt ihn von vorn ab.\nAuflösen zeigt Titel, Interpret und Jahr. Das Jahr ist farbig wie die Playlist. Erst drücken, wenn die Karte eingeordnet ist."]
       : ["Bedienung", "In diesem Modus steuert die Seite die Wiedergabe selbst, deshalb gibt es kein Pausieren oder Zurückspulen. Auflösen zeigt Titel, Interpret und Jahr, erst drücken, wenn die Karte eingeordnet ist."],
-    more: ["+10 Sek. hören", "Spielt den Song weitere 10 Sekunden. Die Seite zählt mit, wie oft verlängert wurde. Der Preis (Vorschlag: 1 Joker pro Verlängerung) wird von euch selbst abgerechnet."],
+    more: ["+10 Sek. hören", "Spielt den Song weitere 10 Sekunden. Die Seite zählt mit, wie oft verlängert wurde, abgerechnet wird von euch selbst.\n\nPreis pro Verlängerung – Beispiele (einigt euch vorher):\n1. Joker-Preis: Jede Verlängerung kostet 1 Joker. Das ist unser Vorschlag.\n2. Gestaffelt: Die 1. ist gratis, die 2. kostet 1 Joker, ab der 3. kostet jede 2 Joker.\n3. Einmal-Regel: Pro Zug darf man einmal gratis verlängern. Gut für Anfänger und Kinder.\n4. Karten-Risiko: Wer verlängert und danach falsch einordnet, verliert zusätzlich eine Karte aus der Zeitleiste."],
     scan: ["Karte scannen", "Öffnet die Kamera. Halte sie auf den QR-Code einer Karte, der passende Song startet automatisch. Alternativ kannst du den QR-Code auch mit der normalen Kamera-App scannen."],
     device: ["Wiedergabegerät", "Hier wählst du, wo der Ton abgespielt wird: auf diesem Handy oder zum Beispiel auf einem Lautsprecher mit Spotify. Wenn nichts erscheint: Spotify-App einmal öffnen, einen Song starten und hier auf ↻ tippen.\n\nTipp: Läuft der Song auf einem anderen Gerät, sieht dieses Handy keinen Titel."]
   };
