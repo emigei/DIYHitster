@@ -65,7 +65,7 @@
     $("modal").style.display = "flex";
   }
 
-  const onColor = (c) => { const n = parseInt(c.slice(1), 16); return 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255) > 150 ? "#111" : "#fff"; };
+  const onColor = (c) => { const n = parseInt(c.slice(1), 16); return 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255) > 128 ? "#000" : "#fff"; };
 
   function save() { LS.setItem("hit_lists", JSON.stringify([...selected])); }
   function setAll(on) { selected = new Set(on ? Object.keys(lists) : []); save(); drawChips(); }
