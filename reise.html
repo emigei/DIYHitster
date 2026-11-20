@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reise-Edition</title>
+<script src="common.js"></script>
+<style>
+  .tl { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:14px 0; }
+  .yr { padding:8px 10px; border-radius:10px; border:2px solid var(--c,#ff5500); font-weight:700; font-size:14px; }
+  .gap { width:30px; border-radius:10px; border:1px dashed var(--orange); background:none; color:var(--orange); cursor:pointer; font-size:16px; }
+  .gap.sel { background:var(--orange); color:var(--on,#fff); }
+  .ir label { flex:1; } .ir input[type=checkbox] { width:auto; margin:0 6px 0 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card" id="app"></div>
+  <div class="card" id="devbox" style="margin-top:14px;padding:14px;"></div>
+</div>
+<script>
+  const LV = { original: "Original", pro: "Pro", expert: "Expert" };
+  const INFO = {
+    intro: ["Reise-Edition", "Hitster ohne Karten, zum Beispiel im Auto. Ein Mitspieler ist DJ (am besten der Beifahrer) und bedient die Seite. Alle anderen hören nur zu: Die Seite sagt die Zeitleiste an, der Spieler nennt laut die Stelle, der DJ tippt sie ein.\n\nWer als Erster 10 Karten richtig in seiner Zeitleiste hat, gewinnt."],
+    players: ["Spieler und Stufe", "Trage alle Mitspieler ein, der DJ darf mitspielen. Die Schwierigkeit kann pro Spieler verschieden sein:\n\nOriginal: Nur die Stelle in der Zeitleiste raten.\nPro: Zusätzlich Interpret und Titel nennen, sonst verfällt die Karte. Es gibt keine neuen Token.\nExpert: Zusätzlich das genaue Jahr nennen. Es gibt keine neuen Token."],
+    tok: ["Token (Joker)", "Token sind Joker. Du bekommst einen, wenn du in deinem Zug Interpret und Titel richtig nennst (nur Original).\n\nEinsatz: 1 Token zum Überspringen des Songs, 1 Token zum Anfechten einer Karte oder 3 Token gegen eine Karte tauschen. Je nach Spielausgabe startet man mit 2 oder 3 Token."],
+    team: ["Team-Spiel (Jamming)", "Alle spielen gemeinsam als ein Team mit einer Zeitleiste. Ihr müsst 10 Karten sammeln, bevor die Token aufgebraucht sind. Liegt das Team falsch, verfällt die Karte und ein Token geht verloren. Anfechten gibt es nicht."],
+    speak: ["Ansagen", "Die Seite sagt per Sprache an, wer dran ist, wie die Zeitleiste aussieht, und löst jeden Song laut auf. Praktisch im Auto, wenn niemand auf den Bildschirm schauen soll. Funktioniert nur, wenn das Handy eine deutsche Stimme hat."],
+    banner: ["Wer ist dran?", "Zeigt den Spieler am Zug, seine Stufe, die Token und die Karten (Ziel: 10). Darunter siehst du die Zeitleiste mit den Jahreszahlen der Karten. Die Farbe ist die der Playlist."],
+    play: ["Song abspielen", "Spielt den nächsten Song. Titel und Jahr bleiben verborgen. Der Spieler nennt dann, wo der Song in seine Zeitleiste gehört."],
+    trade: ["3 Token tauschen", "Drei Token gegen eine Karte: Die Seite zieht einen Song und legt ihn automatisch an die richtige Stelle. Das geht nur, bevor ein Song läuft, und für jeden Spieler jederzeit zwischen den Zügen."],
+    pp: ["Pause / Weiter", "Pausiert den Song oder spielt ihn weiter. Gut, wenn jemand nachdenkt oder gesprochen wird."],
+    place: ["Stelle wählen", "Der Spieler sagt laut, wo der Song hingehört, z. B. „zwischen 1991 und 2003“. Der DJ tippt auf das ＋ an dieser Stelle. Die Stelle lässt sich ändern, solange niemand angefochten hat."],
+    skip: ["Überspringen", "Der Song ist zu schwer? Für 1 Token spielt die Seite einen neuen Song. Nur vor der Stellenwahl möglich. Der Token ist danach verbraucht."],
+    named: ["Interpret & Titel", "Hat der Spieler in seinem Zug Interpret und Titel richtig genannt, hier abhaken. In der Stufe Original gibt das einen Token. Pro und Expert brauchen den Haken, um die Karte zu behalten. Bei Expert muss auch das Jahr exakt stimmen."],
+    chal: ["Anfechten", "Ein anderer Spieler glaubt, dass die Stelle falsch ist. Er setzt 1 Token ein und tippt auf die Stelle, die er für richtig hält. Das geht nur vor dem Auflösen und nur auf eine andere Stelle als die gewählte.\n\nLag der Spieler falsch und die Anfechtung stimmt, bekommt der Anfechter die Karte. Sonst ist der Token weg. Bei Pro und Expert muss der Anfechter ebenfalls nennen (Haken setzen), dafür behält er den Token bei Erfolg.\n\nFechten mehrere dieselbe Stelle an, hat der mit den wenigsten Karten Vorrang, dann der mit den wenigsten Token, sonst entscheidet das Los. Wer leer ausgeht, bekommt seinen Token zurück."],
+    reveal: ["Auflösen", "Zeigt Titel, Interpret und Jahr und wertet die Runde aus: Karte behalten, Anfechtungen, Token. Als Jahr zählt die erste Veröffentlichung."]
+  };
+  const I = (k) => `<button class="i" onclick="info(INFO.${k})">i</button>`;
+
+  let S = { setup: [{ name: "Spieler 1", level: "original" }, { name: "Spieler 2", level: "original" }], tok: 3, team: false, speak: true,
+    phase: "setup", players: [], turn: 0, deck: [], cur: null, place: null, ch: [], pc: null, named: false, exact: false,
+    log: [], playing: false, win: null, lost: false, msg: "" };
+  let SONGS = [];
+
+  if (!needLogin()) init();
+  async function init() {
+    try { SONGS = await loadSongs(); } catch (e) { $("app").innerText = "songs.json konnte nicht geladen werden."; return; }
+    $("devbox").innerHTML = devHTML; loadDevices(); render();
+  }
+
+  const say = (t) => { if (S.speak) speak(t); };
+  const fits = (tl, g, y) => (g === 0 || +tl[g - 1].year <= y) && (g === tl.length || y <= +tl[g].year);
+  function ins(tl, c) { let i = tl.findIndex((x) => +x.year > +c.year); if (i < 0) i = tl.length; tl.splice(i, 0, c); }
+  function gapLabel(tl, g) { return g === 0 ? "vor " + tl[0].year : g === tl.length ? "nach " + tl[g - 1].year : "zwischen " + tl[g - 1].year + " und " + tl[g].year; }
+  function announce() {
+    const p = S.players[S.turn];
+    say((S.team ? "Eure Zeitleiste: " : p.name + " ist dran. Deine Zeitleiste: ") + p.tl.map((c) => c.year).join(", ") + ".");
+  }
+
+  function render() { $("app").innerHTML = S.phase === "setup" ? setupHTML() : S.phase === "over" ? overHTML() : gameHTML(); }
+
+  /* ---------- Einrichtung ---------- */
+  function setupHTML() {
+    let h = `<div class="status">Reise-Edition ${I("intro")}</div><div class="sm">Songs im Stapel: ${SONGS.length}</div>
+      <div class="sm" style="margin-top:14px;">Spieler ${I("players")}</div>`;
+    S.setup.forEach((p, i) => {
+      h += `<div class="ir"><input value="${esc(p.name)}" oninput="S.setup[${i}].name=this.value"><select style="width:auto;margin:0;" onchange="S.setup[${i}].level=this.value">${Object.keys(LV).map((k) => `<option value="${k}"${p.level === k ? " selected" : ""}>${LV[k]}</option>`).join("")}</select>${S.setup.length > 2 ? `<button class="i" onclick="S.setup.splice(${i},1);render()">×</button>` : ""}</div>`;
+    });
+    if (S.setup.length < 10) h += `<button class="btn second" onclick="S.setup.push({name:'Spieler '+(S.setup.length+1),level:'original'});render()">+ Spieler</button>`;
+    h += `<div class="ir">Token am Start <select style="width:auto;margin:0;" onchange="S.tok=+this.value"><option${S.tok === 2 ? " selected" : ""}>2</option><option${S.tok === 3 ? " selected" : ""}>3</option></select>${I("tok")}</div>
+      <div class="ir"><label><input type="checkbox" ${S.team ? "checked" : ""} onchange="S.team=this.checked">Team-Spiel (Jamming)</label>${I("team")}</div>
+      <div class="ir"><label><input type="checkbox" ${S.speak ? "checked" : ""} onchange="S.speak=this.checked">Ansagen per Sprache</label>${I("speak")}</div>
+      <button class="btn" onclick="begin()">Los geht's</button><div class="sm" id="err" style="margin-top:8px;"></div>
+      <button class="mini" onclick="location.href='start.html'">&#9776; Menü</button>`;
+    return h;
+  }
+
+  function begin() {
+    const n = S.team ? 1 : S.setup.length;
+    if (SONGS.length < n + 20) { $("err").innerText = "Zu wenige Songs. Wähle auf der Startseite mehr Playlists."; return; }
+    S.deck = shuffle(SONGS);
+    S.players = S.team
+      ? [{ name: "Team", level: "original", tokens: S.tok, tl: [S.deck.pop()] }]
+      : S.setup.map((p) => ({ name: p.name.trim() || "Spieler", level: p.level, tokens: S.tok, tl: [S.deck.pop()] }));
+    S.turn = 0; S.phase = "choose"; S.win = null; S.lost = false; S.msg = "";
+    announce(); render();
+  }
+
+  /* ---------- Spielansicht ---------- */
+  function tlHTML(p, mode) {
+    let h = '<div class="tl">';
+    for (let g = 0; g <= p.tl.length; g++) {
+      if (mode && !(mode === "chal" && g === S.place)) h += `<button class="gap${mode === "place" && S.place === g ? " sel" : ""}" onclick="gap(${g})">＋</button>`;
+      if (g < p.tl.length) h += `<span class="yr" style="--c:${p.tl[g].color}">${esc(p.tl[g].year)}</span>`;
+    }
+    return h + "</div>";
+  }
+
+  function gameHTML() {
+    const p = S.players[S.turn];
+    let h = `<div class="status">${S.team ? "Team" : esc(p.name) + " ist dran"} ${I("banner")}</div>
+      <div class="sm">${LV[p.level]} · Token: ${p.tokens} · Karten: ${p.tl.length}/10</div>`;
+    h += tlHTML(p, S.phase === "place" ? (S.pc !== null ? "chal" : S.ch.length === 0 ? "place" : null) : null);
+
+    if (S.phase === "choose") {
+      h += `<div class="ir"><button class="btn" onclick="startSong()">▶ Song abspielen</button>${I("play")}</div>`;
+      S.players.forEach((q, i) => { if (q.tokens >= 3) h += `<div class="ir"><button class="btn second" onclick="trade(${i})">${esc(q.name)}: 3 Token → Karte</button>${I("trade")}</div>`; });
+    }
+    if (S.phase === "place") {
+      h += `<div class="ir"><button class="btn second" onclick="toggle()">${S.playing ? "❚❚ Pause" : "▶ Weiter"}</button>${I("pp")}</div>`;
+      if (S.pc !== null) {
+        h += `<div class="sm">Stelle für ${esc(S.players[S.pc].name)} wählen <button class="mini" onclick="S.pc=null;render()">Abbrechen</button></div>`;
+      } else if (S.place === null) {
+        h += `<div class="sm">Spieler nennt die Stelle, DJ tippt auf ＋ ${I("place")}</div>`;
+        if (p.tokens > 0) h += `<div class="ir"><button class="btn second" onclick="skip()">Überspringen (−1 Token)</button>${I("skip")}</div>`;
+      } else {
+        h += `<div class="sm">Gewählt: ${gapLabel(p.tl, S.place)}</div>
+          <div class="ir"><label><input type="checkbox" ${S.named ? "checked" : ""} onchange="S.named=this.checked">Interpret &amp; Titel genannt</label>${I("named")}</div>`;
+        if (p.level === "expert") h += `<div class="ir"><label><input type="checkbox" ${S.exact ? "checked" : ""} onchange="S.exact=this.checked">Jahr genau genannt</label></div>`;
+        if (!S.team) {
+          S.players.forEach((q, i) => { if (i !== S.turn && q.tokens > 0 && !S.ch.some((c) => c.p === i)) h += `<div class="ir"><button class="btn second" onclick="S.pc=${i};render()">${esc(q.name)} ficht an</button>${I("chal")}</div>`; });
+          S.ch.forEach((c, k) => {
+            const q = S.players[c.p];
+            h += `<div class="sm">${esc(q.name)}: ${gapLabel(p.tl, c.gap)}${q.level !== "original" ? ` <label><input type="checkbox" ${c.named ? "checked" : ""} onchange="S.ch[${k}].named=this.checked"> alles genannt</label>` : ""}</div>`;
+          });
+        }
+        h += `<div class="ir"><button class="btn" onclick="reveal()">Auflösen</button>${I("reveal")}</div>`;
+      }
+    }
+    if (S.phase === "revealed") {
+      h += `<div style="white-space:pre-line;margin:12px 0;text-align:left;">${esc(S.log.join("\n"))}</div><button class="btn" onclick="nextTurn()">${S.win !== null || S.lost ? "Weiter" : "Nächster Zug"}</button>`;
+    }
+    if (!S.team) h += `<div class="sm" style="margin-top:14px;">${S.players.map((q) => esc(q.name) + ": " + q.tl.length + " Karten, " + q.tokens + " Token").join("<br>")}</div>`;
+    return h + `<div class="sm" style="margin-top:8px;">${esc(S.msg)}</div>`;
+  }
+
+  function overText() {
+    if (S.lost) return "Die Token sind aufgebraucht. Ihr habt " + S.players[0].tl.length + " Karten geschafft.";
+    return S.team ? "Geschafft! 10 Karten im Team!" : S.players[S.win].name + " hat 10 Karten und gewinnt!";
+  }
+  function overHTML() { return `<div class="status">Spielende</div><p style="font-size:18px;margin:22px 0;">${esc(overText())}</p><button class="btn" onclick="location.reload()">Neues Spiel</button><button class="mini" onclick="location.href='start.html'">&#9776; Menü</button>`; }
+
+  /* ---------- Ablauf ---------- */
+  function gap(g) {
+    if (S.pc !== null) { S.players[S.pc].tokens--; S.ch.push({ p: S.pc, gap: g, named: false }); S.pc = null; }
+    else S.place = g;
+    render();
+  }
+
+  async function startSong() {
+    if (!S.deck.length) { S.msg = "Der Stapel ist leer."; render(); return; }
+    S.cur = S.deck.pop(); S.place = null; S.ch = []; S.pc = null; S.named = false; S.exact = false; S.msg = "";
+    try { await playTrack(S.cur.spotify, 0); S.playing = true; S.phase = "place"; }
+    catch (e) { S.deck.push(S.cur); S.msg = e.message; }
+    render();
+  }
+
+  async function skip() { S.players[S.turn].tokens--; await startSong(); }
+
+  async function toggle() {
+    try {
+      if (S.playing) { await pausePlay(); S.playing = false; }
+      else { const r = await resumePlay(); if (!r.ok) throw new Error(explain(r.status)); S.playing = true; }
+    } catch (e) { S.msg = e.message; }
+    render();
+  }
+
+  function trade(i) {
+    const q = S.players[i];
+    if (q.tokens < 3 || !S.deck.length) return;
+    q.tokens -= 3; const c = S.deck.pop(); ins(q.tl, c);
+    say(q.name + " tauscht drei Token gegen eine Karte aus dem Jahr " + c.year + ".");
+    S.msg = q.name + " bekommt: " + c.year + " – " + c.title + " (" + c.artist + ")";
+    if (q.tl.length >= 10) { S.win = i; S.phase = "over"; say(overText()); }
+    render();
+  }
+
+  async function reveal() {
+    await pausePlay(); S.playing = false;
+    const p = S.players[S.turn], c = S.cur, y = +c.year, log = [];
+    const ok = fits(p.tl, S.place, y);
+    const need = p.level === "original" || (S.named && (p.level === "pro" || S.exact));
+    log.push("Das war: " + c.title + " – " + c.artist + " (" + c.year + ")");
+    let winner = null;
+    if (ok && need) { winner = S.turn; log.push(S.team ? "Richtig!" : p.name + " liegt richtig und behält die Karte."); }
+    else if (ok) log.push("Die Stelle stimmt, aber es fehlten Angaben. Die Karte verfällt.");
+    else log.push(S.team ? "Leider falsch." : p.name + " liegt falsch.");
+
+    if (!S.team) {
+      if (winner === null) {
+        const valid = S.ch.filter((ch) => fits(p.tl, ch.gap, y) && (S.players[ch.p].level === "original" || ch.named));
+        valid.sort((a, b) => S.players[a.p].tl.length - S.players[b.p].tl.length || S.players[a.p].tokens - S.players[b.p].tokens || Math.random() - 0.5);
+        if (valid.length) {
+          const w = valid[0], q = S.players[w.p];
+          winner = w.p; log.push(q.name + " hat richtig angefochten und bekommt die Karte.");
+          if (q.level !== "original") q.tokens++;
+          S.ch.forEach((o) => { if (o !== w && o.gap === w.gap) S.players[o.p].tokens++; });
+        }
+      }
+      if (winner === null) log.push("Keine passende Anfechtung. Die Karte wird abgelegt.");
+    } else if (winner === null) { p.tokens--; log.push("Ein Token geht verloren."); }
+
+    if (winner !== null) ins(S.players[winner].tl, c);
+    if (p.level === "original" && S.named) { p.tokens++; log.push(p.name + " bekommt einen Token."); }
+
+    S.win = S.players.findIndex((q) => q.tl.length >= 10); if (S.win < 0) S.win = null;
+    S.lost = S.team && S.win === null && p.tokens <= 0;
+    S.log = log; S.phase = "revealed";
+    say(log.join(" ")); render();
+  }
+
+  function nextTurn() {
+    if (S.win !== null || S.lost) { S.phase = "over"; say(overText()); return render(); }
+    if (!S.team) S.turn = (S.turn + 1) % S.players.length;
+    S.phase = "choose"; S.cur = null; S.msg = "";
+    announce(); render();
+  }
+</script>
+</body>
+</html>

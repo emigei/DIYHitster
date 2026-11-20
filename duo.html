@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Duo-Duell</title>
+<script src="common.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="card" id="app"></div>
+  <div class="card" id="devbox" style="margin-top:14px;padding:14px;"></div>
+</div>
+<script>
+  const INFO = {
+    duo: ["Duo-Duell", "Die Seite spielt zwei Songs nacheinander, je etwa 10 Sekunden aus der Mitte. Du sagst, welcher der beiden älter ist. Danach siehst du beide Titel mit Jahr. Es werden keine Karten gebraucht. Gespielt wird aus den Playlists, die du auf der Startseite gewählt hast."],
+    solo: ["Allein: Serie", "Jede richtige Antwort verlängert deine Serie. Bei der ersten falschen Antwort ist sie vorbei. Dein Rekord wird auf diesem Gerät gespeichert."],
+    two: ["Zu zweit", "Ihr antwortet abwechselnd. Für jede richtige Antwort gibt es einen Punkt, wer zuerst 5 Punkte hat, gewinnt."],
+    ans: ["Antworten", "Tippe auf das Lied, das früher erschienen ist. Als Jahr zählt die erste Veröffentlichung, nicht eine spätere Neuauflage."],
+    again: ["Nochmal hören", "Spielt den Ausschnitt des gewählten Lieds noch einmal 10 Sekunden. Du darfst beliebig oft nachhören."]
+  };
+  const I = (k) => `<button class="i" onclick="info(INFO.${k})">i</button>`;
+  let pool = [], mode = "solo", score = [0, 0], turn = 0, streak = 0, pair = null, run = 0, msg = "", stage = "menu", lastOk = false;
+  let best = +LS.getItem("duo_best") || 0;
+
+  if (!needLogin()) init();
+
+  async function init() {
+    try { pool = await loadSongs(); } catch (e) { $("app").innerText = "songs.json konnte nicht geladen werden."; return; }
+    $("devbox").innerHTML = devHTML; loadDevices(); draw();
+  }
+
+  function scoreLine() {
+    return mode === "solo" ? `Serie: ${streak} · Rekord: ${best}` : `Spieler 1: ${score[0]} · Spieler 2: ${score[1]} · Dran: Spieler ${turn + 1}`;
+  }
+
+  function draw() {
+    let h = `<div class="status">Duo-Duell ${I("duo")}</div>`;
+    if (stage === "menu") {
+      h += `<div class="sm">Songs im Stapel: ${pool.length}</div><div class="sm">${esc(msg)}</div>
+        <div class="ir"><button class="btn" onclick="start('solo')">Allein: Serie</button>${I("solo")}</div>
+        <div class="ir"><button class="btn" onclick="start('two')">Zu zweit: bis 5 Punkte</button>${I("two")}</div>
+        <button class="mini" onclick="location.href='start.html'">&#9776; Menü</button>`;
+    } else {
+      h += `<div class="sm" style="margin-top:6px;">${scoreLine()}</div><p style="font-size:18px;margin:22px 0;">${esc(msg)}</p>`;
+      if (stage === "answer") {
+        h += `<div class="ir"><button class="btn" onclick="answer(0)">Lied 1 ist älter</button><button class="btn" onclick="answer(1)">Lied 2 ist älter</button>${I("ans")}</div>
+          <div class="ir"><button class="btn second" onclick="again(0)">Lied 1 nochmal</button><button class="btn second" onclick="again(1)">Lied 2 nochmal</button>${I("again")}</div>`;
+      }
+      if (stage === "result") {
+        h += pair.map((s, i) => `<div style="margin:6px 0;"><b>${i + 1}.</b> ${esc(s.title)} – ${esc(s.artist)} <b style="color:${s.color}">${esc(s.year)}</b></div>`).join("");
+        const fin = mode === "two" && score.some((s) => s >= 5);
+        h += `<button class="btn" onclick="next()">${fin ? "Fertig" : mode === "solo" && !lastOk ? "Neue Serie" : "Weiter"}</button>`;
+      }
+      h += `<button class="mini" style="margin-top:14px;" onclick="toMenu()">&#9776; Menü</button>`;
+    }
+    $("app").innerHTML = h;
+  }
+
+  function toMenu() { run++; pausePlay(); stage = "menu"; msg = ""; draw(); }
+  function start(m) { mode = m; score = [0, 0]; turn = 0; streak = 0; round(); }
+
+  async function snip(s) {
+    const len = await trackLength(s.spotify);
+    await playTrack(s.spotify, Math.floor(len * (0.15 + Math.random() * 0.35)));
+  }
+  async function waitSec(sec, id) {
+    for (let k = 0; k < sec * 10; k++) { if (id !== run) return false; await sleep(100); }
+    return id === run;
+  }
+  function fail(id, e) { if (id === run) { msg = e.message; stage = "menu"; draw(); } }
+
+  async function round() {
+    const id = ++run; pair = null;
+    for (let k = 0; k < 80 && !pair; k++) {
+      const a = pool[Math.floor(Math.random() * pool.length)], b = pool[Math.floor(Math.random() * pool.length)];
+      if (a && b && a.id !== b.id && +a.year !== +b.year) pair = [a, b];
+    }
+    if (!pair) { msg = "Zu wenige Songs."; stage = "menu"; draw(); return; }
+    stage = "listen";
+    try {
+      msg = "Lied 1 …"; draw(); await snip(pair[0]); if (!(await waitSec(10, id))) return;
+      msg = "Lied 2 …"; draw(); await snip(pair[1]); if (!(await waitSec(10, id))) return;
+      await pausePlay(); stage = "answer"; msg = "Welches Lied ist älter?"; draw();
+    } catch (e) { fail(id, e); }
+  }
+
+  async function again(i) {
+    const id = ++run; stage = "listen"; msg = "Lied " + (i + 1) + " …"; draw();
+    try {
+      await snip(pair[i]); if (!(await waitSec(10, id))) return;
+      await pausePlay(); stage = "answer"; msg = "Welches Lied ist älter?"; draw();
+    } catch (e) { fail(id, e); }
+  }
+
+  function answer(i) {
+    run++; pausePlay();
+    const older = +pair[0].year < +pair[1].year ? 0 : 1; lastOk = i === older;
+    if (mode === "solo") {
+      if (lastOk) { streak++; if (streak > best) { best = streak; LS.setItem("duo_best", best); } msg = "Richtig!"; }
+      else msg = "Leider falsch. Serie beendet bei " + streak + ".";
+    } else if (lastOk) {
+      score[turn]++; msg = "Richtig! Punkt für Spieler " + (turn + 1) + ".";
+      if (score[turn] >= 5) msg += " Spieler " + (turn + 1) + " gewinnt!";
+    } else msg = "Leider falsch.";
+    stage = "result"; draw();
+  }
+
+  function next() {
+    if (mode === "solo") { if (!lastOk) streak = 0; return round(); }
+    if (score.some((s) => s >= 5)) { stage = "menu"; msg = ""; return draw(); }
+    turn ^= 1; round();
+  }
+</script>
+</body>
+</html>
