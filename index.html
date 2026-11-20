@@ -14,7 +14,7 @@
           background:rgba(22,22,22,.95); box-shadow:0 15px 45px rgba(0,0,0,.6); position:relative; }
   .status { color:var(--orange); font-weight:700; letter-spacing:.06em; text-transform:uppercase; min-height:1.3em; }
   .btn { width:100%; margin-top:15px; padding:16px; border:none; border-radius:16px; cursor:pointer;
-         background:var(--orange); color:#fff; font-weight:700; text-transform:uppercase; }
+         background:var(--orange); color:var(--on,#fff); font-weight:700; text-transform:uppercase; }
   .btn.second { background:#1d1d1d; border:1px solid var(--border); color:#f5f5f5; text-transform:none; font-weight:400; }
   input, select { width:100%; margin-top:12px; padding:12px; border-radius:12px; border:1px solid var(--border);
                   background:#1d1d1d; color:#fff; font-size:14px; }
@@ -29,6 +29,12 @@
   #msg, #setup-msg { margin-top:12px; font-size:13px; line-height:1.4; color:var(--muted); }
   .row { display:flex; gap:8px; align-items:flex-end; } .row select { flex:1; } .row button { margin-top:12px; padding:12px; width:auto; }
   .tiny { position:absolute; top:15px; right:15px; background:none; border:none; color:#444; font-size:10px; cursor:pointer; }
+  .i { width:22px; height:22px; flex:none; align-self:center; border-radius:50%; border:1px solid #777; background:none; color:#ccc; font-size:12px; cursor:pointer; padding:0; margin:0; }
+  .irow { display:flex; align-items:center; gap:8px; } .irow .btn { flex:1; }
+  .row .i { margin-bottom:12px; }
+  #modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); align-items:center; justify-content:center; padding:20px; z-index:9; }
+  #modal > div { max-width:340px; background:#1b1b1b; border:1px solid #444; border-radius:20px; padding:22px; line-height:1.5; font-size:14px; white-space:pre-line; text-align:left; }
+  #modal b { display:block; color:var(--orange); margin-bottom:8px; font-size:16px; }
 </style>
 </head>
 <body>
@@ -42,29 +48,37 @@
 
 <div id="game-screen" class="card" style="display:none;">
   <button class="tiny" onclick="manualId()">DEV</button>
-  <div class="status" id="game-status">Bereit</div>
+  <button class="tiny" style="left:15px;right:auto;color:#999;font-size:12px;" onclick="location.href='start.html'">&#9776; Men&uuml;</button>
+  <div class="status"><span id="game-status">Bereit</span> <button class="i" onclick="info('mode')">i</button></div>
+  <div id="mode-label" style="font-size:12px;color:#bdbdbd;margin-top:4px;"></div>
 
   <div id="controls">
-    <button class="round small" onclick="startTrack()" title="Von vorn">&#8634;</button>
+    <button class="round small" id="replay-btn" onclick="startTrack()" title="Von vorn">&#8634;</button>
     <button class="round" id="play-btn" onclick="togglePlay()">&#10074;&#10074;</button>
+    <button class="i" onclick="info('controls')">i</button>
   </div>
 
+  <div id="extra" class="irow" style="display:none;"><button class="btn second" id="more-btn" onclick="moreTime()">+10 Sek. h&ouml;ren</button><button class="i" onclick="info('more')">i</button></div>
+  <div id="extra-note" style="font-size:12px;color:#bdbdbd;margin-top:6px;"></div>
   <button class="btn second" id="reveal-btn" style="display:none;" onclick="toggleInfo()">Aufl&ouml;sen</button>
   <div id="info"><div class="t" id="i-title"></div><div class="a" id="i-artist"></div><div class="y" id="i-year"></div></div>
   <div id="msg"></div>
 
   <div id="reader"></div>
-  <button class="btn" id="scan-btn" onclick="toggleScanner()">&#128247; Karte scannen</button>
+  <div class="irow"><button class="btn" id="scan-btn" onclick="toggleScanner()">&#128247; Karte scannen</button><button class="i" style="margin-top:15px;" onclick="info('scan')">i</button></div>
 
   <div class="row">
     <select id="device-select" onchange="saveDevice()"></select>
     <button class="btn second" onclick="refreshDevices()" title="Ger&auml;te aktualisieren">&#8635;</button>
+    <button class="i" onclick="info('device')">i</button>
   </div>
 </div>
 
+<div id="modal" onclick="this.style.display='none'"><div><b id="m-title"></b><span id="m-text"></span><br><br><small style="color:#888">Tippen zum Schlie&szlig;en</small></div></div>
+
 <script>
   // Client-ID der Spotify-App hier eintragen oder beim ersten Start im Formular einfügen.
-  const SPOTIFY_CLIENT_ID = "a0cc8ecea9bd4a7c96ba91393110bf6d";
+  const SPOTIFY_CLIENT_ID = "";
   const SCOPES = "user-modify-playback-state user-read-playback-state";
   const REDIRECT = location.origin + (location.pathname.endsWith("/") ? location.pathname + "index.html" : location.pathname);
   const LS = localStorage;
@@ -72,6 +86,37 @@
   const clientId = () => SPOTIFY_CLIENT_ID || LS.getItem("sp_client") || "";
 
   let songs = {}, current = null, playing = false, qr = null;
+  const MODE = LS.getItem("mode") || "classic";
+  const MODE_NAME = { classic: "Klassisch", snippet: "Hörschnipsel-Leiter", bombe: "Bombe" }[MODE] || "Klassisch";
+  let timers = [], extras = 0;
+
+  const INFO = {
+    mode: () => ({
+      classic: ["Klassisch", "Karte scannen, Song hören, Karte in die Zeitleiste legen, dann Auflösen. Wer zuerst 10 Karten richtig liegen hat, gewinnt. Wer Interpret und Titel nennt, bekommt einen Joker zum Anfechten."],
+      snippet: ["Hörschnipsel-Leiter", "Der Song spielt nur 5 Sekunden. Wer mehr hören will, tippt auf +10 Sek. und zahlt dafür (Vorschlag: 1 Joker pro Verlängerung)."],
+      bombe: ["Bombe", "Der Song startet an einer zufälligen Stelle und stoppt nach 15 bis 45 Sekunden von selbst. Wer das Handy beim Stopp hält, ordnet die Karte ein."]
+    }[MODE]),
+    controls: () => MODE === "classic"
+      ? ["Bedienung", "▶ / ❚❚ startet und pausiert den Song.\n↺ spielt ihn von vorn ab.\nAuflösen zeigt Titel, Interpret und Jahr. Das Jahr ist farbig wie die Playlist. Erst drücken, wenn die Karte eingeordnet ist."]
+      : ["Bedienung", "In diesem Modus steuert die Seite die Wiedergabe selbst, deshalb gibt es kein Pausieren oder Zurückspulen. Auflösen zeigt Titel, Interpret und Jahr, erst drücken, wenn die Karte eingeordnet ist."],
+    more: ["+10 Sek. hören", "Spielt den Song weitere 10 Sekunden. Die Seite zählt mit, wie oft verlängert wurde. Der Preis (Vorschlag: 1 Joker pro Verlängerung) wird von euch selbst abgerechnet."],
+    scan: ["Karte scannen", "Öffnet die Kamera. Halte sie auf den QR-Code einer Karte, der passende Song startet automatisch. Alternativ kannst du den QR-Code auch mit der normalen Kamera-App scannen."],
+    device: ["Wiedergabegerät", "Hier wählst du, wo der Ton abgespielt wird: auf diesem Handy oder zum Beispiel auf einem Lautsprecher mit Spotify. Wenn nichts erscheint: Spotify-App einmal öffnen, einen Song starten und hier auf ↻ tippen.\n\nTipp: Läuft der Song auf einem anderen Gerät, sieht dieses Handy keinen Titel."]
+  };
+
+  function info(key) {
+    const t = typeof INFO[key] === "function" ? INFO[key]() : INFO[key];
+    $("m-title").innerText = t[0];
+    $("m-text").innerText = t[1];
+    $("modal").style.display = "flex";
+  }
+
+  function accent(c) {
+    if (!/^#[0-9a-f]{6}$/i.test(c || "")) return;
+    const n = parseInt(c.slice(1), 16), l = 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255);
+    document.documentElement.style.setProperty("--orange", c);
+    document.documentElement.style.setProperty("--on", l > 150 ? "#111" : "#fff");
+  }
 
   window.onload = async () => {
     try {
@@ -98,6 +143,7 @@
     $("setup-screen").style.display = "none";
     $("game-screen").style.display = "block";
     await refreshDevices();
+    initMode();
     const pending = urlId || LS.getItem("pending_id");
     LS.removeItem("pending_id");
     if (pending) playId(pending);
@@ -202,6 +248,7 @@
     if (!song) return say("ID " + id + " nicht gefunden.");
     if (!song.spotify) return say("Für diese Karte fehlt noch die Spotify-ID.");
     current = { id, song };
+    accent(song.color);
     $("controls").style.display = "flex";
     $("reveal-btn").style.display = "block";
     $("reveal-btn").innerText = "Auflösen";
@@ -211,7 +258,9 @@
 
   async function startTrack() {
     if (!current) return;
-    const body = { uris: ["spotify:track:" + current.song.spotify], position_ms: 0 };
+    let pos = 0;
+    if (MODE === "bombe") pos = Math.floor((await trackLength(current.song.spotify)) * (0.1 + Math.random() * 0.5));
+    const body = { uris: ["spotify:track:" + current.song.spotify], position_ms: pos };
     const put = () => {
       const dev = $("device-select").value;
       return api("/me/player/play" + (dev ? "?device_id=" + dev : ""), "PUT", body);
@@ -219,7 +268,7 @@
     try {
       let r = await put();
       if (r.status === 404) { await refreshDevices(); if ($("device-select").value) r = await put(); }
-      if (r.ok) { setPlaying(true); say(""); } else say(explain(r.status));
+      if (r.ok) { setPlaying(true); say(""); setupMode(); } else say(explain(r.status));
     } catch (e) { say("Verbindungsfehler."); }
   }
 
@@ -244,6 +293,52 @@
     }
     box.style.display = show ? "block" : "none";
     $("reveal-btn").innerText = show ? "Verstecken" : "Auflösen";
+  }
+
+  /* ---------- Modi ---------- */
+  function initMode() {
+    $("mode-label").innerText = "Modus: " + MODE_NAME;
+    if (MODE !== "classic") { $("play-btn").style.display = "none"; $("replay-btn").style.display = "none"; }
+  }
+
+  async function trackLength(id) {
+    try { const r = await api("/tracks/" + id); if (r.ok) return (await r.json()).duration_ms || 180000; } catch (e) {}
+    return 180000;
+  }
+
+  async function pauseNow() {
+    const dev = $("device-select").value;
+    try { await api("/me/player/pause" + (dev ? "?device_id=" + dev : ""), "PUT"); } catch (e) {}
+    setPlaying(false);
+  }
+
+  function setupMode() {
+    timers.forEach(clearTimeout); timers = []; extras = 0;
+    $("extra").style.display = "none"; $("extra-note").innerText = "";
+    if (MODE === "snippet") { $("extra").style.display = "flex"; listen(5); note(); }
+    if (MODE === "bombe") {
+      say("💣 Die Bombe tickt … Handy weitergeben!");
+      timers.push(setTimeout(async () => { await pauseNow(); say("💥 BUMM! Wer das Handy hält, ordnet die Karte ein."); }, 15000 + Math.random() * 30000));
+    }
+  }
+
+  function listen(sec) {
+    timers.push(setTimeout(async () => { await pauseNow(); say("⏸ Schnipsel vorbei. Einordnen oder verlängern?"); }, sec * 1000));
+  }
+
+  function note() {
+    $("extra-note").innerText = extras ? "Verlängerungen: " + extras : "Nur 5 Sekunden. Wer mehr hören will, verlängert.";
+  }
+
+  async function moreTime() {
+    if (!current) return;
+    extras++;
+    const dev = $("device-select").value;
+    try {
+      const r = await api("/me/player/play" + (dev ? "?device_id=" + dev : ""), "PUT");
+      if (!r.ok) return say(explain(r.status));
+    } catch (e) { return say("Verbindungsfehler."); }
+    setPlaying(true); say(""); listen(10); note();
   }
 
   /* ---------- Scanner ---------- */

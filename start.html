@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Musikquiz</title>
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; padding:20px; min-height:100vh; background:radial-gradient(circle at center,#202020 0%,#0a0a0a 100%); color:#fff; font-family:sans-serif; }
+  .wrap { max-width:420px; margin:0 auto; }
+  h1 { text-align:center; letter-spacing:.08em; text-transform:uppercase; }
+  h2 { font-size:14px; letter-spacing:.08em; text-transform:uppercase; color:#bdbdbd; display:flex; align-items:center; gap:8px; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { padding:10px 14px; border-radius:999px; border:2px solid var(--c); background:transparent; color:#fff; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:6px; }
+  .chip.on { background:var(--c); color:var(--on); font-weight:700; }
+  .mini { margin-top:10px; background:none; border:none; color:#bdbdbd; text-decoration:underline; cursor:pointer; font-size:13px; }
+  .mode { display:flex; align-items:center; gap:10px; margin-top:12px; padding:16px; border-radius:20px; border:1px solid rgba(255,255,255,.15); background:rgba(22,22,22,.95); cursor:pointer; }
+  .mode b { display:block; font-size:16px; } .mode small { color:#bdbdbd; }
+  .mode.off { opacity:.5; cursor:default; } .mode > div { flex:1; }
+  .i { width:22px; height:22px; flex:none; border-radius:50%; border:1px solid #777; background:none; color:#ccc; font-size:12px; cursor:pointer; padding:0; }
+  #modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); align-items:center; justify-content:center; padding:20px; z-index:9; }
+  #modal > div { max-width:340px; background:#1b1b1b; border:1px solid #444; border-radius:20px; padding:22px; line-height:1.5; font-size:14px; white-space:pre-line; }
+  #modal b { display:block; color:#ff5500; margin-bottom:8px; font-size:16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Musikquiz</h1>
+
+  <h2>Playlists <button class="i" onclick="info('lists')">i</button></h2>
+  <div class="chips" id="chips"></div>
+  <button class="mini" onclick="setAll(true)">Alle</button> <button class="mini" onclick="setAll(false)">Keine</button>
+
+  <h2 style="margin-top:26px;">Spielmodus <button class="i" onclick="info('modes')">i</button></h2>
+  <div id="modes"></div>
+</div>
+
+<div id="modal" onclick="this.style.display='none'"><div><b id="m-title"></b><span id="m-text"></span><br><br><small style="color:#888">Tippen zum Schließen</small></div></div>
+
+<script>
+  const LS = localStorage, $ = (id) => document.getElementById(id);
+  let lists = {}, selected = new Set();
+
+  const INFO = {
+    lists: ["Playlists", "Hier wählst du, aus welchen Playlists gespielt wird. Die Farbe ist dieselbe wie das Jahr auf den Karten.\n\nFür das Kartenspiel (Klassisch, Hörschnipsel-Leiter, Bombe) spielt die Auswahl keine Rolle: Jede gescannte Karte wird abgespielt. Wichtig wird sie für Duo-Duell und Reise-Edition, weil dort die Seite die Songs selbst zieht."],
+    modes: ["Spielmodi", "Tippe auf einen Modus, um loszulegen. Mit dem i neben jedem Modus siehst du die Regeln. Alle Modi funktionieren mit denselben Karten."],
+    classic: ["Klassisch", "Karte scannen, den Song hören und die Karte in deine Zeitleiste legen: vor oder nach den Karten, die schon vor dir liegen. Dann Auflösen drücken. Stimmt die Reihenfolge, darfst du die Karte behalten, sonst ist sie weg.\n\nGewonnen hat, wer als Erster 10 Karten richtig liegen hat.\n\nJoker: Nennst du Interpret und Titel richtig, bekommst du einen Joker. Damit kannst du bei einem Gegner eine Karte anfechten, bevor sie aufgelöst wird."],
+    snippet: ["Hörschnipsel-Leiter", "Wie Klassisch, aber der Song spielt nur 5 Sekunden. Wer mehr hören will, tippt auf +10 Sek. Jede Verlängerung kostet etwas. Unser Vorschlag: einen Joker pro Verlängerung. Einigt euch vorher darauf.\n\nSo wird aus „Ich höre einfach lange zu“ eine Entscheidung zwischen Risiko und Hörzeit."],
+    bombe: ["Bombe", "Der Song startet an einer zufälligen Stelle und stoppt nach einer zufälligen Zeit (15 bis 45 Sekunden), ohne Vorwarnung.\n\nDas Handy wird reihum weitergegeben. Wer es beim Stopp in der Hand hält, muss die Karte einordnen. Keiner weiß vorher, wen es trifft."],
+    duo: ["Duo-Duell (in Arbeit)", "Die Seite spielt zwei Songs nacheinander, je etwa 10 Sekunden. Du tippst, welcher älter ist. Die Seite zählt deine Serie. Geht allein oder zu zweit, ganz ohne Karten."],
+    reise: ["Reise-Edition (in Arbeit)", "Hitster ohne Karten, zum Beispiel im Auto. Der Beifahrer ist DJ und bedient die Seite. Alle anderen spielen nur mit den Ohren: Die Seite sagt die Zeitleiste an, man sagt die Stelle laut, der DJ tippt sie ein.\n\nEnthält die Original-Regeln mit Jokern, Anfechten und Überspringen sowie Pro, Expert und Team-Variante (Jamming)."]
+  };
+
+  const MODES = [
+    { key: "classic", name: "Klassisch", sub: "Karten scannen & einordnen", href: "index.html" },
+    { key: "snippet", name: "Hörschnipsel-Leiter", sub: "5 Sekunden, Zeit kostet Joker", href: "index.html" },
+    { key: "bombe", name: "Bombe", sub: "Zufallsstart, Zufallsstopp", href: "index.html" },
+    { key: "duo", name: "Duo-Duell", sub: "Welcher Song ist älter?", off: true },
+    { key: "reise", name: "Reise-Edition", sub: "Ohne Karten, zum Beispiel im Auto", off: true }
+  ];
+
+  function info(key) {
+    $("m-title").innerText = INFO[key][0];
+    $("m-text").innerText = INFO[key][1];
+    $("modal").style.display = "flex";
+  }
+
+  const onColor = (c) => { const n = parseInt(c.slice(1), 16); return 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255) > 150 ? "#111" : "#fff"; };
+
+  function save() { LS.setItem("hit_lists", JSON.stringify([...selected])); }
+  function setAll(on) { selected = new Set(on ? Object.keys(lists) : []); save(); drawChips(); }
+
+  function drawChips() {
+    const box = $("chips"); box.innerHTML = "";
+    for (const name in lists) {
+      const b = document.createElement("button");
+      b.className = "chip" + (selected.has(name) ? " on" : "");
+      b.style.setProperty("--c", lists[name].color); b.style.setProperty("--on", onColor(lists[name].color));
+      b.innerText = name + " (" + lists[name].count + ")";
+      b.onclick = () => { selected.has(name) ? selected.delete(name) : selected.add(name); save(); drawChips(); };
+      box.appendChild(b);
+    }
+  }
+
+  function drawModes() {
+    MODES.forEach((m) => {
+      const d = document.createElement("div");
+      d.className = "mode" + (m.off ? " off" : "");
+      d.innerHTML = "<div><b></b><small></small></div>";
+      d.querySelector("b").innerText = m.name; d.querySelector("small").innerText = m.sub + (m.off ? " – kommt bald" : "");
+      const i = document.createElement("button");
+      i.className = "i"; i.innerText = "i"; i.onclick = (e) => { e.stopPropagation(); info(m.key); };
+      d.appendChild(i);
+      if (!m.off) d.onclick = () => { LS.setItem("mode", m.key); location.href = m.href; };
+      $("modes").appendChild(d);
+    });
+  }
+
+  window.onload = async () => {
+    drawModes();
+    try {
+      const data = await (await fetch("songs.json")).json();
+      for (const pl in data) lists[pl] = { color: data[pl].color || "#ff5500", count: Object.keys(data[pl]).filter((k) => k !== "color" && k !== "image").length };
+    } catch (e) { $("chips").innerText = "songs.json konnte nicht geladen werden."; return; }
+    const saved = JSON.parse(LS.getItem("hit_lists") || "null");
+    selected = new Set(saved ? saved.filter((n) => lists[n]) : Object.keys(lists));
+    drawChips();
+  };
+</script>
+</body>
+</html>
